@@ -34,4 +34,9 @@ public class UIManager : MonoBehaviour
         line1.SetActive(!isShifted);
         shiftLine1.SetActive(isShifted);
     }
+
+    public bool GetIsShifted()
+    {
+        return isShifted;
+    }
 }

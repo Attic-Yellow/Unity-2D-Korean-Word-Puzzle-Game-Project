@@ -8,6 +8,8 @@ public class WordContainer : MonoBehaviour
 
     [SerializeField] private int currentLetterIndex;
 
+    [SerializeField] private char word;
+
     private void Awake()
     {
         Initialize();
@@ -25,16 +27,43 @@ public class WordContainer : MonoBehaviour
     public void Add(char letter)
     {
         letterContainers[currentLetterIndex].SetLetter(letter);
-        //currentLetterIndex++;
+
+        if (letterContainers[currentLetterIndex].isNextLetter)
+        {
+            if (currentLetterIndex < letterContainers.Length)
+            {
+                currentLetterIndex++;
+            }
+
+            if (letterContainers[currentLetterIndex - 1].isChangedFinal)
+            {
+                word = letterContainers[currentLetterIndex - 1].GetChangedFinal();
+                letterContainers[currentLetterIndex].SetChangedFinal(word);
+            }
+            else
+            {
+                word = letterContainers[currentLetterIndex - 1].GetChangedFinal();
+                letterContainers[currentLetterIndex].SetLetter(letter);
+            }
+
+            letterContainers[currentLetterIndex - 1].isNextLetter = false;
+            letterContainers[currentLetterIndex - 1].isChangedFinal = false;
+        }
     }
 
     public bool RemoveLetter()
     {
-        if (currentLetterIndex <= 0)
+        if (currentLetterIndex < 0)
+        {
             return false;
+        }
 
-        currentLetterIndex--;
-        letterContainers[currentLetterIndex].Initialize();
+        letterContainers[currentLetterIndex].RemoveLetter();
+
+        if (currentLetterIndex == 0)
+        {
+            return false;
+        }
 
         return true;
     }
