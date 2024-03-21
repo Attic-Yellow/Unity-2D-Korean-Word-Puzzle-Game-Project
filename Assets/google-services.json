@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "406387109808",
+    "project_id": "project-radle-6a6dc",
+    "storage_bucket": "project-radle-6a6dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406387109808:android:bb65db30e00ba651993075",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.Unity2DKoreanWordPuzzleGameProject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABHcMpkaq_s4wZaoqZdsv8DvGn2do55DE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

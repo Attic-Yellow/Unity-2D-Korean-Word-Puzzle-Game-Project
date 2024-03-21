@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
+    [SerializeField] private AnswerLoader answerLoader;
+
     [SerializeField] private GameObject line1;
     [SerializeField] private GameObject shiftLine1;
 

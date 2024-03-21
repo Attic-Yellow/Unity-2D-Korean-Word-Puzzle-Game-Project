@@ -272,7 +272,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
-  m_EffectDistance: {x: 8, y: -11}
+  m_EffectDistance: {x: 10, y: -13}
   m_UseGraphicAlpha: 1
 --- !u!114 &3343674811160751806
 MonoBehaviour:
@@ -286,5 +286,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 506e1cb20093a1e41926b8fd387fad6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderer: {fileID: 8078685630015682220}
   letterText: {fileID: 1701418551759238226}

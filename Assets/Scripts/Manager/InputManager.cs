@@ -4,35 +4,30 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using UnityEngine.Analytics;
+using UnityEngine.Windows;
 
 public class InputManager : MonoBehaviour
 {
-    public static InputManager instance;
-
-    [Header(" Elements ")]
     [SerializeField] private WordContainer[] wordContainers;
     [SerializeField] private Button enterButton;
 
-    [Header(" Settings ")]
     private int currentWordContaainerIndex;
-    private bool canAddLetter = true;
     private bool shouldReset;
+    [SerializeField] private char[] inputWord = new char[3];
+    [SerializeField] private string word;
+    [SerializeField] private bool isInput = false;
+    [SerializeField] private string currentAnswerKey;
 
-    [Header(" Events ")]
     public static Action onLetterAdded;
     public static Action onLetterRemoved;
 
     public void Awake()
     {
-        if (instance == null)
-            instance = this;
-        else
-            Destroy(gameObject);
+        GameManager.Instance.inputManager = this;
     }
 
     void Start()
     {
-        //연결되어 있음
         Initialize();
 
         KeyboardKey.onKeyPressed += KeyPressedCallback;
@@ -43,12 +38,14 @@ public class InputManager : MonoBehaviour
         KeyboardKey.onKeyPressed -= KeyPressedCallback;
     }
 
+    // 현재 단어 라인 및 엔터 키 상태 초기화 메서드
     private void Initialize()
     {
-        currentWordContaainerIndex = 0;
-        canAddLetter = true;
+        isInput = false;
 
-        DisableEnterButton();
+        currentWordContaainerIndex = 0;
+
+        EnterButtonController();
 
         for (int i = 0; i < wordContainers.Length; i++)
         {
@@ -58,48 +55,109 @@ public class InputManager : MonoBehaviour
         shouldReset = false;
     }
 
+    // 키보드 입력 시 호출
     private void KeyPressedCallback(char letter)
     {
-        if (!canAddLetter)
-            return;
+        isInput = true;
 
         wordContainers[currentWordContaainerIndex].Add(letter);
 
-        if (wordContainers[currentWordContaainerIndex].IsComplete())
+        if (GameManager.Instance.uiManager.GetIsShifted())
         {
-            canAddLetter = false;
-            EnableEnterButton();
-            //CheckWord();
-            //currentWordContaainerIndex++;
+            GameManager.Instance.uiManager.OnShiftButton();
         }
 
-        onLetterAdded?.Invoke();
+        EnterButtonController();
+
+         onLetterAdded?.Invoke();
     }
 
+    // 글자 지우기 버튼 클릭 시 호출
     public void BackspacePressedCallback()
     {
-        bool removedLetter = wordContainers[currentWordContaainerIndex].RemoveLetter();
+        wordContainers[currentWordContaainerIndex].RemoveLetter();
 
-        if (removedLetter)
-            DisableEnterButton();
-
-        canAddLetter = true;
+        EnterButtonController();
 
         onLetterAdded?.Invoke();
     }
 
-    private void EnableEnterButton()
+    // 엔터 버튼 클릭 시 호출
+    public void EnterPressedCallback()
     {
-        enterButton.interactable = true;
+        currentAnswerKey = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
+
+        if (word.Equals(currentAnswerKey, StringComparison.OrdinalIgnoreCase)) // 정답일 경우의 처리 로직
+        {
+            Debug.Log("Correct Answer!");
+            
+        }
+        else // 오답일 경우의 처리 로직
+        {
+            isInput = false;
+            word = null;
+            currentWordContaainerIndex++;
+            EnterButtonController();
+            Debug.Log("틀림");
+            
+        }
     }
 
-    private void DisableEnterButton()
+    // 엔터 버튼 활성화/비활성화 메서드
+    private void EnterButtonController()
     {
-        enterButton.interactable = false;
+        // 단어 조합
+        CombinationLetter();
+
+        if (isInput)
+        {
+            // 단어 존재 여부 확인
+            GameManager.Instance.firebaseManager.CheckFieldValueExists(word, exists =>
+            {
+                if (exists && wordContainers[currentWordContaainerIndex].IsComplete()) // 단어가 존재하며, 입력한 글자의 조건이 모두 갖춰진 경우
+                {
+                    
+                    
+                    enterButton.interactable = true; // 엔터 버튼 활성화
+                }
+                else // 단어가 존재하지 않거나, 글자 조건이 충족되지 않는 경우
+                {
+                    
+                    
+                    enterButton.interactable = false; // 엔터 버튼 비활성화
+                    enterButton.image.color = new Color(0.5f, 0.5f, 0.5f, 1); // 비활성화 상태 색상
+                }
+            });
+        }
+        else
+        {
+            enterButton.interactable = false;
+            enterButton.image.color = new Color(0.5f, 0.5f, 0.5f, 1); // 비활성화 상태 색상
+        }
     }
 
+    // 
     public WordContainer GetCurrentWordContainer()
     {
         return wordContainers[currentWordContaainerIndex];
+    }
+
+    // 입력된 글자 단어 조합 메서드
+    private string CombinationLetter()
+    {
+        for (int i = 0; i < wordContainers[currentWordContaainerIndex].GetWord().Length; i++)
+        {
+            inputWord[i] = wordContainers[currentWordContaainerIndex].GetWord()[i];
+        }
+
+        
+        word = string.Empty; // word 변수 초기화
+
+        for (int i = 0; i < inputWord.Length; i++)
+        {
+            word += inputWord[i];
+        }
+
+        return word;
     }
 }
