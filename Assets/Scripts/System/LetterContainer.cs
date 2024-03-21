@@ -10,7 +10,7 @@ public class LetterContainer : MonoBehaviour
     [SerializeField] private TextMeshPro letterText;
     private char lastChar = '\0'; // 마지막 문자를 저장하기 위한 변수
     private char[] IncompleteLetter = new char[6];
-    private int currentIndex = 0;
+    public int currentIndex = 0;
     public bool isNextLetter = false;
     public bool isChangedFinal = false;
 
@@ -107,22 +107,48 @@ public class LetterContainer : MonoBehaviour
 
     public void RemoveLetter()
     {
-        if (lastChar >= 0xAC00 && lastChar <= 0xD7A3)
+        if (currentIndex == 5)
         {
-            // 초성, 중성, 종성 분리
-            int lastCharCode = lastChar - 0xAC00;
-            int lastCharInitial = lastCharCode / (21 * 28);
-            int lastCharMedial = (lastCharCode % (21 * 28)) / 28;
-            int lastCharFinal = lastCharCode % 28;
-
-/*            if (currentIndex > 0)
-            {
-                char newChar = (char)(0xAC00 + (lastCharInitial * 21 * 28) + (lastCharMedial * 28));
-                letterText.text = letterText.text.Substring(0, letterText.text.Length - 1);
-                IncompleteLetter[currentIndex] = '\0';
-                currentIndex--;
-                print($"{currentIndex}, {IncompleteLetter[currentIndex]}");
-            }*/
+            letterText.text = null;
+            letterText.text += IncompleteLetter[3];
+            lastChar = IncompleteLetter[3];
+            currentIndex--;
+            print($"{currentIndex}, {IncompleteLetter[4]}");
+        }
+        else if (currentIndex == 4)
+        {
+            letterText.text = null;
+            letterText.text += IncompleteLetter[2];
+            lastChar = IncompleteLetter[2];
+            currentIndex--;
+            print($"{currentIndex}, {IncompleteLetter[3]}");
+        }
+        else if (currentIndex == 3)
+        {
+            letterText.text = null;
+            letterText.text += IncompleteLetter[1];
+            lastChar= IncompleteLetter[1];
+            currentIndex--;
+            print($"{currentIndex}, {IncompleteLetter[2]}");
+        }
+        else if (currentIndex == 2)
+        {
+            letterText.text = null;
+            letterText.text += IncompleteLetter[0];
+            lastChar = IncompleteLetter[0];
+            currentIndex--;
+            print($"{currentIndex}, {IncompleteLetter[1]}");
+        }
+        else if (currentIndex == 1)
+        {
+            letterText.text = null;
+            lastChar = '\0';
+            currentIndex--;
+            print($"{currentIndex}, {IncompleteLetter[0]}");
+        }
+        else
+        {
+            return;
         }
     }
 

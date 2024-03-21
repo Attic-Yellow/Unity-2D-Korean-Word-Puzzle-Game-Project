@@ -53,14 +53,21 @@ public class WordContainer : MonoBehaviour
 
     public bool RemoveLetter()
     {
-        if (currentLetterIndex < 0)
+        if (currentLetterIndex == 0 && letterContainers[currentLetterIndex].currentIndex == 0)
         {
             return false;
         }
 
-        letterContainers[currentLetterIndex].RemoveLetter();
-
-        if (currentLetterIndex == 0)
+        if (letterContainers[currentLetterIndex].currentIndex > 0)
+        {
+            letterContainers[currentLetterIndex].RemoveLetter();
+        }
+        else if (letterContainers[currentLetterIndex].currentIndex == 0)
+        {
+            currentLetterIndex--;
+            letterContainers[currentLetterIndex].RemoveLetter();
+        }
+        else
         {
             return false;
         }
