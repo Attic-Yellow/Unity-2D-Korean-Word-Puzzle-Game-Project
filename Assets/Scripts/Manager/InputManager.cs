@@ -18,6 +18,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private bool isInput = false;
     [SerializeField] private string currentAnswerKey;
     [SerializeField] private bool isAnswer = false;
+    [SerializeField] private string document;
 
     public static Action onLetterAdded;
     public static Action onLetterRemoved;
@@ -44,7 +45,7 @@ public class InputManager : MonoBehaviour
     {
         inputWord = new char[GameManager.Instance.GetLevel()];
         isInput = false;
-
+        document = "korean" + GameManager.Instance.GetLevel();
         currentWordContaainerIndex = 0;
 
         EnterButtonController();
@@ -91,6 +92,7 @@ public class InputManager : MonoBehaviour
         {
             isAnswer = true;
             wordContainers[currentWordContaainerIndex].CompareLetters(isAnswer);
+            GameManager.Instance.uiManager.SuccessController();
 
         }
         else // 오답일 경우의 처리 로직
@@ -110,7 +112,6 @@ public class InputManager : MonoBehaviour
     {
         // 단어 조합
         CombinationLetter();
-        string document = "korean" + GameManager.Instance.GetLevel();
 
         if (isInput)
         {

@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Korean Level 4 Game Scene.unity
     guid: 8f06c361dcfbdee4da9ba2de0f30e15a
+  - enabled: 1
+    path: Assets/Scenes/Korean Level 5 Game Scene.unity
+    guid: abab3006e90fa8a44bccbd7c40c0f176
   m_configObjects: {}

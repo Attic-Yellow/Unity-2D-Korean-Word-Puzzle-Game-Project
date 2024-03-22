@@ -110,7 +110,6 @@ public class WordContainer : MonoBehaviour
     // 단어가 완성되었는지 확인
     public bool IsComplete() 
     {
-        print($"{letterContainers.Length - 1}, {currentLetterIndex}");
         return currentLetterIndex == (letterContainers.Length - 1) && letterContainers[currentLetterIndex].currentIndex >= 2;
     }
 

@@ -31,14 +31,11 @@ public class GameManager : MonoBehaviour
 
     public int GetLevel()
     {
-        print(level);
         return level;
     }
 
     public void SetLevel(int level)
     {
-        print(level);
         this.level = level;
-        print(this.level);
     }
 }

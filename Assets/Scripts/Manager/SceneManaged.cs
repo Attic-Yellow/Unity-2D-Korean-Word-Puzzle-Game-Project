@@ -37,6 +37,7 @@ public class SceneManaged : MonoBehaviour
         {
             case 3: return "Korean Level 3 Game Scene";
             case 4: return "Korean Level 4 Game Scene";
+            case 5: return "Korean Level 5 Game Scene";
             default:
                 return ""; // 유효하지 않은 레벨 번호일 경우
         }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private bool isShifted = false;
     [SerializeField] private GameObject options;
     [SerializeField] private GameObject[] checkMessage;
+    [SerializeField] private GameObject success;
 
 
     private void Awake()
@@ -41,6 +43,11 @@ public class UIManager : MonoBehaviour
             {
                 checkMessage[i].SetActive(false);
             }
+        }
+
+        if (success!= null)
+        {
+            success.SetActive(false);
         }
     }
 
@@ -75,6 +82,13 @@ public class UIManager : MonoBehaviour
     public void CheckMessageController(int index)
     {
         checkMessage[index].SetActive(!checkMessage[index].activeSelf);
+    }
+
+    // 성공 패널 활성화/비활성화
+    public void SuccessController()
+    {
+        success.SetActive(!success.activeSelf);
+        success.transform.Find("Success").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
     }
 
     // 뒤로 가기 버튼
