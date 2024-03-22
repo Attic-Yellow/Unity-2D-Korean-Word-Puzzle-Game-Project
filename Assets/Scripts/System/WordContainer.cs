@@ -7,7 +7,7 @@ public class WordContainer : MonoBehaviour
     [SerializeField] private LetterContainer[] letterContainers;
     [SerializeField] private int currentLetterIndex;
     [SerializeField] private char letter;
-    [SerializeField] private char[] word = new char[3];
+    [SerializeField] private char[] word;
     [SerializeField] private bool isComplete;
 
     private void Awake()
@@ -18,6 +18,7 @@ public class WordContainer : MonoBehaviour
     // 단어 라인 초기화
     public void Initialize()
     {
+        word = new char[GameManager.Instance.GetLevel()];
         currentLetterIndex = 0;
         foreach (var letterContainer in letterContainers)
         {
@@ -109,12 +110,21 @@ public class WordContainer : MonoBehaviour
     // 단어가 완성되었는지 확인
     public bool IsComplete() 
     {
-        return currentLetterIndex == 2 && letterContainers[currentLetterIndex].currentIndex >= 2;
+        print($"{letterContainers.Length - 1}, {currentLetterIndex}");
+        return currentLetterIndex == (letterContainers.Length - 1) && letterContainers[currentLetterIndex].currentIndex >= 2;
     }
 
     // 완성된 단어 반환
     public char[] GetWord()
     {
         return word;
+    }
+
+    public void CompareLetters(bool isAnswer)
+    {
+        for (int i = 0; i < letterContainers.Length; i++)
+        {
+            letterContainers[i].GetCompareLetters(i, isAnswer);
+        }
     }
 }

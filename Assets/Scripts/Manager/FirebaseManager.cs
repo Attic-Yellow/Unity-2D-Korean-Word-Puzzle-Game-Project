@@ -29,7 +29,7 @@ public class FirebaseManager : MonoBehaviour
         });
     }
 
-    public void CheckFieldValueExists(string userValue, System.Action<bool> onResult)
+    public void CheckFieldValueExists(string document, string userValue, System.Action<bool> onResult)
     {
         if (!IsFirebaseInitialized)
         {
@@ -38,7 +38,7 @@ public class FirebaseManager : MonoBehaviour
             return;
         }
 
-        DocumentReference docRef = db.Collection("answer").Document("korean3");
+        DocumentReference docRef = db.Collection("answer").Document(document);
         docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)

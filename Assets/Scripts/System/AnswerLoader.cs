@@ -6,12 +6,14 @@ using Newtonsoft.Json;
 
 public class AnswerLoader : MonoBehaviour
 {
-    public int difficulty = 3; // 사용자가 선택한 난이도를 저장하는 변수
+    public int difficulty; // 사용자가 선택한 난이도를 저장하는 변수
     private Dictionary<string, string> answers = new Dictionary<string, string>();
-    private string currentAnswerKey; // 현재 게임에서의 정답 키
+    private string currentAnswerKey; // 현재 게임에서의 정답 단어
+    private string[] currentAnswerValue; // 현재 게임에서의 정답의 단어 글자(초성, 중성, 종성) 조합
 
     private void Start()
     {
+        difficulty = GameManager.Instance.GetLevel(); // 사용자가 선택한 난이도를 가져옴
         LoadAnswerFromBundle(difficulty); // 게임 시작 시, 선택된 난이도에 맞는 정답 파일 로드
     }
 
@@ -62,11 +64,17 @@ public class AnswerLoader : MonoBehaviour
         List<string> keys = new List<string>(answers.Keys);
         int randomIndex = Random.Range(0, keys.Count);
         currentAnswerKey = keys[randomIndex];
-        Debug.Log($"Current answer key: {currentAnswerKey} - Value: {answers[currentAnswerKey]}"); // 여기서 currentAnswerKey가 게임에서의 정답임
+        currentAnswerValue = answers[currentAnswerKey].Split('.'); // 정답 문자열에서 '.'을 기준으로 분리하여 currentAnswerValue에 할당
+        Debug.Log($"{currentAnswerKey} - {currentAnswerValue[0]}, {currentAnswerValue[1]}, {currentAnswerValue[2]}"); // 여기서 currentAnswerKey가 게임에서의 정답임
     }
 
     public string GetCurrentAnswerKey()
     {
         return currentAnswerKey;
+    }
+
+    public string[] GetCurrentAnswerValue()
+    {
+        return currentAnswerValue;
     }
 }

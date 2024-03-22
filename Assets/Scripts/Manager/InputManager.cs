@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System;
 using UnityEngine.Analytics;
 using UnityEngine.Windows;
+using UnityEngine.Rendering.LookDev;
 
 public class InputManager : MonoBehaviour
 {
@@ -12,11 +13,11 @@ public class InputManager : MonoBehaviour
     [SerializeField] private Button enterButton;
 
     private int currentWordContaainerIndex;
-    private bool shouldReset;
-    [SerializeField] private char[] inputWord = new char[3];
+    [SerializeField] private char[] inputWord;
     [SerializeField] private string word;
     [SerializeField] private bool isInput = false;
     [SerializeField] private string currentAnswerKey;
+    [SerializeField] private bool isAnswer = false;
 
     public static Action onLetterAdded;
     public static Action onLetterRemoved;
@@ -41,6 +42,7 @@ public class InputManager : MonoBehaviour
     // 현재 단어 라인 및 엔터 키 상태 초기화 메서드
     private void Initialize()
     {
+        inputWord = new char[GameManager.Instance.GetLevel()];
         isInput = false;
 
         currentWordContaainerIndex = 0;
@@ -51,8 +53,6 @@ public class InputManager : MonoBehaviour
         {
             wordContainers[i].Initialize();
         }
-
-        shouldReset = false;
     }
 
     // 키보드 입력 시 호출
@@ -89,16 +89,18 @@ public class InputManager : MonoBehaviour
 
         if (word.Equals(currentAnswerKey, StringComparison.OrdinalIgnoreCase)) // 정답일 경우의 처리 로직
         {
-            Debug.Log("Correct Answer!");
-            
+            isAnswer = true;
+            wordContainers[currentWordContaainerIndex].CompareLetters(isAnswer);
+
         }
         else // 오답일 경우의 처리 로직
         {
+            isAnswer = false;
+            wordContainers[currentWordContaainerIndex].CompareLetters(isAnswer);
             isInput = false;
             word = null;
             currentWordContaainerIndex++;
             EnterButtonController();
-            Debug.Log("틀림");
             
         }
     }
@@ -108,11 +110,12 @@ public class InputManager : MonoBehaviour
     {
         // 단어 조합
         CombinationLetter();
+        string document = "korean" + GameManager.Instance.GetLevel();
 
         if (isInput)
         {
             // 단어 존재 여부 확인
-            GameManager.Instance.firebaseManager.CheckFieldValueExists(word, exists =>
+            GameManager.Instance.firebaseManager.CheckFieldValueExists(document, word, exists =>
             {
                 if (exists && wordContainers[currentWordContaainerIndex].IsComplete()) // 단어가 존재하며, 입력한 글자의 조건이 모두 갖춰진 경우
                 {
@@ -134,12 +137,6 @@ public class InputManager : MonoBehaviour
             enterButton.interactable = false;
             enterButton.image.color = new Color(0.5f, 0.5f, 0.5f, 1); // 비활성화 상태 색상
         }
-    }
-
-    // 
-    public WordContainer GetCurrentWordContainer()
-    {
-        return wordContainers[currentWordContaainerIndex];
     }
 
     // 입력된 글자 단어 조합 메서드

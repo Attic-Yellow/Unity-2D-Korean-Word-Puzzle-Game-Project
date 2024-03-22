@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
+    path: Assets/Scenes/Languaged and Level Selected Scene.unity
+    guid: e2cc2b6229b7ae24bbb3f4ad6cf67ac7
+  - enabled: 1
+    path: Assets/Scenes/Korean Level 3 Game Scene.unity
+    guid: 72862d522e75b324594aea07fbb4c789
+  - enabled: 1
+    path: Assets/Scenes/Korean Level 4 Game Scene.unity
+    guid: 8f06c361dcfbdee4da9ba2de0f30e15a
   m_configObjects: {}

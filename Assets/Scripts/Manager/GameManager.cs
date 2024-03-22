@@ -12,6 +12,9 @@ public class GameManager : MonoBehaviour
     public FirebaseManager firebaseManager;
     public UIManager uiManager;
     public InputManager inputManager;
+    public SceneManaged sceneManager;
+
+    private int level;
 
     private void Awake()
     {
@@ -24,5 +27,18 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    public int GetLevel()
+    {
+        print(level);
+        return level;
+    }
+
+    public void SetLevel(int level)
+    {
+        print(level);
+        this.level = level;
+        print(this.level);
     }
 }

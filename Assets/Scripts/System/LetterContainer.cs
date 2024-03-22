@@ -5,8 +5,18 @@ using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 
+public enum LetterState
+{
+    None,
+    Consonant,
+    Vowel,
+    Final
+}
+
 public class LetterContainer : MonoBehaviour
 {
+    [SerializeField] private new SpriteRenderer[] renderer;
+
     [SerializeField] private TextMeshPro letterText;
     [SerializeField] private char[] IncompleteLetter = new char[6]; // 글자가 만들어지는 과정을 저장하는 배열(삭제할 때 용이)
     private char lastChar = '\0'; // 마지막 문자를 저장하기 위한 변수
@@ -524,5 +534,97 @@ public class LetterContainer : MonoBehaviour
     {
         int lastCharFinal = (GetLetter() - 0xAC00) % 28;
         return finals[lastCharFinal];
+    }
+
+    // 정답의 초성, 중성, 종성과 비교하여 칸의 색을 바꾸는 메서드
+    public void GetCompareLetters(int currentLetterIndex, bool isAnswer)
+    {
+        char checkWord = GetLetter();
+        string[] currentAnswerValue = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerValue();
+        KeyboardColorizer keyboardColorizer = FindAnyObjectByType<KeyboardColorizer>();
+
+        if (isAnswer)
+        {
+            renderer[0].color = Color.green;
+            renderer[1].color = Color.green;
+            renderer[2].color = Color.green;
+
+            for (int j = 0; j < currentAnswerValue.Length; j++)
+            {
+                keyboardColorizer.UpdateKeyColor(currentAnswerValue[j][0], LetterState.Consonant, ColorState.Green);
+                keyboardColorizer.UpdateKeyColor(currentAnswerValue[j][1], LetterState.Vowel, ColorState.Green);
+                keyboardColorizer.UpdateKeyColor(currentAnswerValue[j][2], LetterState.Final, ColorState.Green);
+            }
+
+            return;
+        }
+
+        if (checkWord >= 0xAC00 && checkWord <= 0xD7A3)
+        {
+            int currentCharCode = checkWord - 0xAC00;
+            int currentCharInitial = currentCharCode / (21 * 28);
+            int currentCharMedial = (currentCharCode % (21 * 28)) / 28;
+            int currentCharFinal = currentCharCode % 28;
+
+            for (int i = 0; i < currentAnswerValue.Length; i++)
+            {
+                if (currentAnswerValue[i][0] == consonants[currentCharInitial] && renderer[0].color != Color.green)
+                {
+                    if (currentLetterIndex == i)
+                    {
+                        renderer[0].color = Color.green;
+                        keyboardColorizer.UpdateKeyColor(consonants[currentCharInitial], LetterState.Consonant, ColorState.Green);
+                    }
+                    else if (renderer[0].color != Color.yellow)
+                    {
+                        renderer[0].color = Color.yellow;
+                        keyboardColorizer.UpdateKeyColor(consonants[currentCharInitial], LetterState.Consonant, ColorState.Yellow);
+                    }
+                }
+                else if(renderer[0].color != Color.green && renderer[0].color != Color.yellow)
+                {
+                    renderer[0].color = Color.gray;
+                    keyboardColorizer.UpdateKeyColor(consonants[currentCharInitial], LetterState.Consonant, ColorState.Gray);
+                }
+
+                if (currentAnswerValue[i][1] == vowels[currentCharMedial] && renderer[1].color != Color.green)
+                {
+                    if (currentLetterIndex == i)
+                    {
+                        renderer[1].color = Color.green;
+                        keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Green);
+                    }
+                    else if (renderer[1].color != Color.yellow)
+                    {
+                        renderer[1].color = Color.yellow;
+                        keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Yellow);
+                    }
+                }
+                else if (renderer[1].color != Color.green && renderer[1].color != Color.yellow)
+                {
+                    renderer[1].color = Color.gray;
+                    keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Gray);
+                }
+
+                if (currentAnswerValue[i][2] == finals[currentCharFinal] && renderer[2].color != Color.green)
+                {
+                    if (currentLetterIndex == i)
+                    {
+                        renderer[2].color = Color.green;
+                        keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Green);
+                    }
+                    else if (renderer[2].color != Color.yellow)
+                    {
+                        renderer[2].color = Color.yellow;
+                        keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Yellow);
+                    }
+                }
+                else if (renderer[2].color != Color.green && renderer[2].color != Color.yellow)
+                {
+                    renderer[2].color = Color.gray;
+                    keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Gray);
+                }
+            }
+        }
     }
 }
