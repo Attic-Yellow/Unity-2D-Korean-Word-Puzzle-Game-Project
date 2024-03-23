@@ -10,6 +10,16 @@ public class SceneManaged : MonoBehaviour
         GameManager.Instance.sceneManager = this;
     }
 
+    public void LoadSceneForLogin()
+    {
+        SceneManager.LoadScene("Login Scene");
+    }
+
+    public void LoadSceneForMain()
+    {
+        SceneManager.LoadScene("Main Scene");
+    }
+
     public void LoadSceneForSelectedLevel()
     {
         SceneManager.LoadScene("Languaged and Level Selected Scene");
@@ -30,7 +40,6 @@ public class SceneManaged : MonoBehaviour
     }
 
     // 레벨 번호를 씬 이름으로 변환
-    // 이 메소드는 각 게임 레벨에 따라 적절한 씬 이름을 반환하도록 수정해야 합니다.
     private string LevelToSceneName(int level)
     {
         switch (level)
@@ -41,5 +50,10 @@ public class SceneManaged : MonoBehaviour
             default:
                 return ""; // 유효하지 않은 레벨 번호일 경우
         }
+    }
+
+    public bool GetMainSceneBoolean()
+    {
+        return SceneManager.GetActiveScene().name == "Main Scene";
     }
 }

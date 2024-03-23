@@ -1,11 +1,18 @@
+using Firebase.Auth;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("로그인 씬")]
+    [SerializeField] private GameObject logIn;
+    [SerializeField] private GameObject signUp;
+
     [SerializeField] private AnswerLoader answerLoader;
     [SerializeField] private GameObject line1;
     [SerializeField] private GameObject shiftLine1;
@@ -13,7 +20,15 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject options;
     [SerializeField] private GameObject[] checkMessage;
     [SerializeField] private GameObject success;
+    [SerializeField] private GameObject fail;
+    [SerializeField] private TextMeshProUGUI successGetScore;
+    [SerializeField] private GameObject profile;
 
+    [Header("유저 정보")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI coinsText;
+    [SerializeField] private TextMeshProUGUI[] correctAnswersText;
+    [SerializeField] private TextMeshProUGUI[] wrongAnswersText;
 
     private void Awake()
     {
@@ -22,6 +37,17 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+
+        if (logIn != null)
+        {
+            logIn.SetActive(false);
+        }
+
+        if (signUp != null) 
+        {
+            signUp.SetActive(false);
+        }
+
         if (line1 != null)
         {
             line1.SetActive(true);
@@ -49,6 +75,110 @@ public class UIManager : MonoBehaviour
         {
             success.SetActive(false);
         }
+
+        if (fail != null)
+        {
+            fail.SetActive(false);
+        }
+
+        if (profile != null)
+        {
+            profile.SetActive(false);
+        }
+
+        GameManager.Instance.UpdateDisplayUserData();
+    }
+
+    // 로그인 패널 활성화/비활성화
+    public void OnLogInButton()
+    {
+        logIn.SetActive(!logIn.activeSelf);
+    }
+
+    // 로그인 버튼 콜백
+    public void OnLogInButtonCallBack(string email, string password)
+    {
+        StartCoroutine(SignInAndLoadScene(email, password));
+    }
+
+    // 회원가입 패널 활성화/비활성화
+    public void OnSignUpButton()
+    {
+        signUp.SetActive(!signUp.activeSelf);
+    }
+
+    // 회원가입 버튼 콜백
+    public void OnSignUpButtonCallBack(string email, string password)
+    {
+        GameManager.Instance.authManager.SignUpWithEmail(email, password, (isSuccess) =>
+        {
+            if (isSuccess)
+            {
+                // print("회원가입 성공");
+                GameManager.Instance.authManager.SignInWithEmail(email, password, (isSuccess) =>
+                {
+                    // print("로그인 성공");
+                    OnSignUpButton();
+                    GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
+                    GameManager.Instance.sceneManager.LoadSceneForMain();
+                });
+            }
+        });
+    }
+
+    // 게스트 로그인 버튼
+    public void OnGuestButton()
+    {
+        StartCoroutine(SignInAnonymouslyAndLoadScene());
+    }
+
+    public IEnumerator SignInAndLoadScene(string email, string password)
+    {
+        var signInTask = FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password);
+        yield return new WaitUntil(() => signInTask.IsCompleted);
+
+        if (signInTask.Exception != null)
+        {
+            Debug.LogError("로그인 실패: " + signInTask.Exception);
+        }
+        else
+        {
+            GameManager.Instance.sceneManager.LoadSceneForMain(); // 로그인 성공, 씬 전환
+        }
+    }
+
+    public IEnumerator SignInAnonymouslyAndLoadScene()
+    {
+        // 게스트 로그인 요청
+        Action<bool> onCompletion = success =>
+        {
+            if (success)
+            {
+                
+                GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
+                GameManager.Instance.sceneManager.LoadSceneForMain(); // 게스트 로그인 성공, 씬 전환
+            }
+            else
+            {
+                Debug.LogError("게스트 로그인 실패"); // 게스트 로그인 실패
+            }
+        };
+
+        
+        GameManager.Instance.firebaseManager.SignInAnonymously(onCompletion); 
+        yield return null; // 이 부분은 SignInAnonymously 메서드가 비동기로 완료될 때까지 기다리지 않고,콜백에서 모든 처리
+
+    }
+
+    // 로그아웃 버튼 콜백
+    public void OnLogoutButtonClick()
+    {
+        GameManager.Instance.LogOut();
+    }
+
+    public void OnGameSeletedButton()
+    {
+        GameManager.Instance.sceneManager.LoadSceneForSelectedLevel();
     }
 
     // Shift 버튼 콜백
@@ -65,33 +195,69 @@ public class UIManager : MonoBehaviour
         return isShifted;
     }
 
+    // 프로필 패널 활성화/비활성화
+    public void OnProfileButton()
+    {
+        if (profile != null)
+        {
+            profile.SetActive(!profile.activeSelf);
+        }
+    }
+
     // 한글 레벨 선택 버튼 콜백
     public void OnKoreanLevelButtonCallBack(int level)
     {
         GameManager.Instance.SetLevel(level);
         GameManager.Instance.sceneManager.LoadSceneForLevel(level);
+        GameManager.Instance.UpdateDisplayUserData();
     }
 
     // 옵션 패널 활성화/비활성화
     public void OnOptionsButton()
     {
-        options.SetActive(!options.activeSelf);
+        if (options != null)
+        {
+            options.SetActive(!options.activeSelf);
+        }
     }
 
     // 메시지 패널 활성화/비활성화
     public void CheckMessageController(int index)
     {
-        checkMessage[index].SetActive(!checkMessage[index].activeSelf);
+        if (checkMessage[index] != null)
+        {
+            checkMessage[index].SetActive(!checkMessage[index].activeSelf);
+        }
     }
 
     // 성공 패널 활성화/비활성화
     public void SuccessController()
     {
-        success.SetActive(!success.activeSelf);
-        success.transform.Find("Success").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
+        if (success != null)
+        {
+            success.SetActive(!success.activeSelf);
+            success.transform.Find("Success").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
+            successGetScore.text = GameManager.Instance.GetScore().ToString();
+        }
     }
 
-    // 뒤로 가기 버튼
+    // 실패 패널 활성화/비활성화
+    public void FailController()
+    {
+        if (fail != null)
+        {
+            fail.SetActive(!fail.activeSelf);
+            success.transform.Find("Fail").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
+        }
+    }
+
+    // 메인으로 가는 버튼
+    public void OnBackToMainButton()
+    {
+        GameManager.Instance.sceneManager.LoadSceneForMain();
+    }
+
+    // 레벨 선택으로 가는 버튼
     public void OnBackButton()
     {
         GameManager.Instance.sceneManager.LoadSceneForSelectedLevel();
@@ -101,5 +267,37 @@ public class UIManager : MonoBehaviour
     public void OnExitButton()
     {
         Application.Quit();
+    }
+
+    // 유저 정보 표시
+    public void DisplayUserProfile(int score, int coins, Dictionary<string, int> correctAnswers, Dictionary<string, int> wrongAnswers)
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = score.ToString();
+        }
+
+        if (coinsText != null)
+        {
+            coinsText.text = coins.ToString();
+        }
+
+        if (correctAnswersText != null && correctAnswersText.Length > 0 && GameManager.Instance.sceneManager.GetMainSceneBoolean() && correctAnswers != null)
+        {
+            for (int i = 0; i < correctAnswersText.Length; i++)
+            {
+                string levelKey = "한글 " + (i + 3).ToString() + " 레벨";
+                correctAnswersText[i].text = correctAnswers.ContainsKey(levelKey) ? correctAnswers[levelKey].ToString() : "0";
+            }
+        }
+
+        if (correctAnswersText != null && wrongAnswersText.Length > 0 && GameManager.Instance.sceneManager.GetMainSceneBoolean() && wrongAnswers != null)
+        {
+            for (int i = 0; i < wrongAnswersText.Length; i++)
+            {
+                string levelKey = "한글 " + (i + 3).ToString() + " 레벨";
+                wrongAnswersText[i].text = wrongAnswers.ContainsKey(levelKey) ? wrongAnswers[levelKey].ToString() : "0";
+            }
+        }
     }
 }

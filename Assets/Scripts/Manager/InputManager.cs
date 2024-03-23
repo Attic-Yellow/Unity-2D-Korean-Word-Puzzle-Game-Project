@@ -12,7 +12,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private WordContainer[] wordContainers;
     [SerializeField] private Button enterButton;
 
-    private int currentWordContaainerIndex;
+    [SerializeField] private int currentWordContaainerIndex;
     [SerializeField] private char[] inputWord;
     [SerializeField] private string word;
     [SerializeField] private bool isInput = false;
@@ -92,6 +92,7 @@ public class InputManager : MonoBehaviour
         {
             isAnswer = true;
             wordContainers[currentWordContaainerIndex].CompareLetters(isAnswer);
+            GameManager.Instance.UpdateScoreAndCoins(true, currentWordContaainerIndex);
             GameManager.Instance.uiManager.SuccessController();
 
         }
@@ -101,9 +102,14 @@ public class InputManager : MonoBehaviour
             wordContainers[currentWordContaainerIndex].CompareLetters(isAnswer);
             isInput = false;
             word = null;
-            currentWordContaainerIndex++;
             EnterButtonController();
-            
+            currentWordContaainerIndex++;
+
+            if (currentWordContaainerIndex == wordContainers.Length) // 마지막 단어까지 오답일 경우
+            {
+                GameManager.Instance.UpdateScoreAndCoins(false, currentWordContaainerIndex);
+                GameManager.Instance.uiManager.FailController();
+            }
         }
     }
 
@@ -120,14 +126,10 @@ public class InputManager : MonoBehaviour
             {
                 if (exists && wordContainers[currentWordContaainerIndex].IsComplete()) // 단어가 존재하며, 입력한 글자의 조건이 모두 갖춰진 경우
                 {
-                    
-                    
                     enterButton.interactable = true; // 엔터 버튼 활성화
                 }
                 else // 단어가 존재하지 않거나, 글자 조건이 충족되지 않는 경우
                 {
-                    
-                    
                     enterButton.interactable = false; // 엔터 버튼 비활성화
                     enterButton.image.color = new Color(0.5f, 0.5f, 0.5f, 1); // 비활성화 상태 색상
                 }

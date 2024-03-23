@@ -12,7 +12,12 @@
           "package_name": "com.DefaultCompany.Unity2DKoreanWordPuzzleGameProject"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "406387109808-6pht9hu11tnrg80o67c09patbprjeti7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyABHcMpkaq_s4wZaoqZdsv8DvGn2do55DE"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "406387109808-6pht9hu11tnrg80o67c09patbprjeti7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "406387109808-3qr78143o57rtrlqgu3susduhkkvtpn2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.DefaultCompany.Unity-2D-Korean-Word-Puzzle-Game-Project"
+              }
+            }
+          ]
         }
       }
     }
