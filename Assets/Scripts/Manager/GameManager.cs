@@ -21,16 +21,19 @@ public class GameManager : MonoBehaviour
     private string userId;
     private int score;
     private int coins;
+    private string nickname;
     private Dictionary<string, int> correctAnswers;
     private Dictionary<string, int> wrongAnswers;
 
     [Header("게임 데이터")]
     private int level;
     private int getScore;
+    private bool isDataLoaded = false;
 
     [Serializable]
     private class UserData
     {
+        public string nickname { get; set; }
         public int score { get; set; }
         public int coins { get; set; }
         public Dictionary<string, int> correctAnswers { get; set; }
@@ -55,13 +58,19 @@ public class GameManager : MonoBehaviour
         StartCoroutine(CheckAutoLoginWhenReady()); // 앱 시작 시 로그인 상태 확인
     }
 
+    // 로그인 성공 시 호출되는 콜백 메서드
+    public void OnLoginSuccess()
+    {
+        StartCoroutine(WaitForUserData()); // 사용자 데이터 로드
+    }
+
+    // 자동 로그인 확인
     private void CheckAutoLogin()
     {
         if (firebaseManager.auth.CurrentUser != null)
         {
             Debug.Log($"자동 로그인 성공: {firebaseManager.auth.CurrentUser.Email}"); // 이미 로그인된 상태
-            LoadCurrentUserProfile(); // 사용자 데이터 로드
-            sceneManager.LoadSceneForMain(); // 메인 화면으로 자동 전환
+            StartCoroutine(WaitForUserData()); // 사용자 데이터 로드
         }
         else
         {
@@ -108,11 +117,13 @@ public class GameManager : MonoBehaviour
             
             if (deserializedUserData != null) // 역직렬화된 객체의 속성에 직접 접근
             {
+                nickname = deserializedUserData.nickname;
                 score = deserializedUserData.score;
                 coins = deserializedUserData.coins;
                 correctAnswers = deserializedUserData.correctAnswers ?? new Dictionary<string, int>();
                 wrongAnswers = deserializedUserData.wrongAnswers ?? new Dictionary<string, int>();
 
+                isDataLoaded = true;
                 UpdateDisplayUserData();
             }
             else
@@ -126,6 +137,41 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private IEnumerator WaitForUserData()
+    {
+        isDataLoaded = false;
+        LoadCurrentUserProfile();
+        yield return new WaitUntil(() => isDataLoaded);
+
+        if (nickname == null)
+        {
+            print("닉네임 패널 활성화");
+            uiManager.OnNicknameButton(); // 닉네임 패널 활성화
+        }
+        else
+        {
+            sceneManager.LoadSceneForMain(); // 메인 화면으로 자동 전환
+        }
+    }
+
+    // 
+    public void UpdateNickname(string nickname)
+    {
+        this.nickname = nickname;
+        firebaseManager.UpdateNickname(userId, nickname, success =>
+        {
+            if (success)
+            {
+                Debug.Log("닉네임 업데이트 성공");
+            }
+            else
+            {
+                Debug.LogError("닉네임 업데이트 실패");
+            }
+        });
+    }
+
+    // 사용자 데이터 업데이트
     public void UpdateScoreAndCoins(bool success, int lineIndex)
     {
         string levelKey = "한글 " + level.ToString() + " 레벨";
@@ -228,5 +274,10 @@ public class GameManager : MonoBehaviour
     public int GetScore()
     {
         return getScore;
+    }
+
+    public string GetNickname()
+    {
+        return nickname;
     }
 }

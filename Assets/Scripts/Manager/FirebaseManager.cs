@@ -6,6 +6,7 @@ using Firebase.Firestore;
 using Firebase.Extensions;
 using System;
 using Firebase.Auth;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -67,6 +68,45 @@ public class FirebaseManager : MonoBehaviour
                         Debug.LogError("게스트 사용자 데이터 초기화 실패");
                     }
                     onCompletion(true);
+                });
+            }
+        });
+    }
+
+    // 닉네임 업데이트
+    public void UpdateNickname(string userId, string userNickname, Action<bool> onCompletion)
+    {
+        var docRef = db.Collection("users").Document(userId);
+
+        docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("문서 조회 실패: " + task.Exception);
+                onCompletion(false);
+                return;
+            }
+
+            DocumentSnapshot snapshot = task.Result;
+            if (snapshot.Exists)
+            {
+                // 문서가 존재하면, 업데이트 수행
+                Dictionary<string, object> updates = new Dictionary<string, object>
+            {
+                { "nickname", userNickname }
+            };
+                docRef.UpdateAsync(updates).ContinueWithOnMainThread(updateTask =>
+                {
+                    if (updateTask.IsFaulted)
+                    {
+                        Debug.LogError("닉네임 업데이트 실패: " + updateTask.Exception);
+                        onCompletion(false);
+                    }
+                    else
+                    {
+                        Debug.Log("닉네임 업데이트 성공");
+                        onCompletion(true);
+                    }
                 });
             }
         });
@@ -178,7 +218,7 @@ public class FirebaseManager : MonoBehaviour
     {
         var docRef = db.Collection("users").Document(userId);
         var user = new Dictionary<string, object>
-    {
+    {   {"nickname", null},
         { "score", 0 },
         { "coins", 500 },
         { "correctAnswers", new Dictionary<string, int> {

@@ -12,19 +12,30 @@ public class UIManager : MonoBehaviour
     [Header("로그인 씬")]
     [SerializeField] private GameObject logIn;
     [SerializeField] private GameObject signUp;
+    [SerializeField] private GameObject nickname;
+    [SerializeField] private GameObject emailVerification;
+    [SerializeField] private TMP_InputField nicknameInputField;
+    [SerializeField] private string email;
+    [SerializeField] private string password;
 
+    [Header("메인 씬")]
+    [SerializeField] private GameObject profile;
+
+    [Header("게임 씬")]
     [SerializeField] private AnswerLoader answerLoader;
     [SerializeField] private GameObject line1;
     [SerializeField] private GameObject shiftLine1;
-    [SerializeField] private bool isShifted = false;
-    [SerializeField] private GameObject options;
-    [SerializeField] private GameObject[] checkMessage;
     [SerializeField] private GameObject success;
     [SerializeField] private GameObject fail;
+    [SerializeField] private bool isShifted = false;
     [SerializeField] private TextMeshProUGUI successGetScore;
-    [SerializeField] private GameObject profile;
+
+    [Header("공용")]
+    [SerializeField] private GameObject options;
+    [SerializeField] private GameObject[] checkMessage;
 
     [Header("유저 정보")]
+    [SerializeField] private TextMeshProUGUI nicknameText;
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI coinsText;
     [SerializeField] private TextMeshProUGUI[] correctAnswersText;
@@ -46,6 +57,16 @@ public class UIManager : MonoBehaviour
         if (signUp != null) 
         {
             signUp.SetActive(false);
+        }
+
+        if (emailVerification != null)
+        {
+            emailVerification.SetActive(false);
+        }
+
+        if (nickname != null)
+        {
+            nickname.SetActive(false);
         }
 
         if (line1 != null)
@@ -110,18 +131,46 @@ public class UIManager : MonoBehaviour
     // 회원가입 버튼 콜백
     public void OnSignUpButtonCallBack(string email, string password)
     {
-        GameManager.Instance.authManager.SignUpWithEmail(email, password, (isSuccess) =>
+        GameManager.Instance.authManager.SignUpWithEmail(email, password, (signUpSuccess, emailSent) =>
         {
-            if (isSuccess)
+            if (signUpSuccess && emailSent)
             {
-                // print("회원가입 성공");
-                GameManager.Instance.authManager.SignInWithEmail(email, password, (isSuccess) =>
-                {
-                    // print("로그인 성공");
-                    OnSignUpButton();
-                    GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
-                    GameManager.Instance.sceneManager.LoadSceneForMain();
-                });
+                this.email = email;
+                this.password = password;
+                Debug.Log("회원가입 성공 및 이메일 인증 링크 전송 완료");
+                OnEmailVerificationButton(); // 이메일 인증 안내 UI 활성화
+                OnSignUpButton(); // 회원가입 UI 비활성화
+            }
+            else if (signUpSuccess)
+            {
+                Debug.LogError("회원가입은 성공했지만 이메일 인증 링크 전송에 실패했습니다.");
+            }
+            else
+            {
+                Debug.LogError("회원가입 실패");
+            }
+        });
+    }
+
+    // 이메일 인증 패널 활성화/비활성화
+    public void OnEmailVerificationButton()
+    {
+        emailVerification.SetActive(!emailVerification.activeSelf);
+    }
+
+    // 이메일 인증 확인 버튼 콜백
+    public void OnEmailVerificationCheckCallback()
+    {
+        GameManager.Instance.authManager.CheckEmailVerification((isVerified) =>
+        {
+            if (isVerified)
+            {
+                Debug.Log("이메일 인증 성공");
+                StartCoroutine(SignInAndLoadScene(email, password));
+            }
+            else
+            {
+                Debug.LogError("이메일 인증이 아직 완료되지 않았습니다. 이메일을 확인해주세요.");
             }
         });
     }
@@ -143,7 +192,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            GameManager.Instance.sceneManager.LoadSceneForMain(); // 로그인 성공, 씬 전환
+            GameManager.Instance.OnLoginSuccess();
         }
     }
 
@@ -154,7 +203,6 @@ public class UIManager : MonoBehaviour
         {
             if (success)
             {
-                
                 GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
                 GameManager.Instance.sceneManager.LoadSceneForMain(); // 게스트 로그인 성공, 씬 전환
             }
@@ -164,10 +212,22 @@ public class UIManager : MonoBehaviour
             }
         };
 
-        
         GameManager.Instance.firebaseManager.SignInAnonymously(onCompletion); 
         yield return null; // 이 부분은 SignInAnonymously 메서드가 비동기로 완료될 때까지 기다리지 않고,콜백에서 모든 처리
 
+    }
+
+    // 닉네임 패널 활성화/비활성화
+    public void OnNicknameButton()
+    {
+        nickname.SetActive(!nickname.activeSelf);
+    }
+
+    // 닉네임 버튼 콜백
+    public void OnNicknameButtonCallBack()
+    {
+        GameManager.Instance.UpdateNickname(nicknameInputField.text);
+        GameManager.Instance.sceneManager.LoadSceneForMain();
     }
 
     // 로그아웃 버튼 콜백
@@ -284,6 +344,11 @@ public class UIManager : MonoBehaviour
 
         if (correctAnswersText != null && correctAnswersText.Length > 0 && GameManager.Instance.sceneManager.GetMainSceneBoolean() && correctAnswers != null)
         {
+            if (nicknameText != null)
+            { 
+                nicknameText.text = GameManager.Instance.GetNickname();
+            }
+
             for (int i = 0; i < correctAnswersText.Length; i++)
             {
                 string levelKey = "한글 " + (i + 3).ToString() + " 레벨";
