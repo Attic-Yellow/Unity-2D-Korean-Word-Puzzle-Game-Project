@@ -1649,7 +1649,7 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 3
+          m_IntArgument: 4
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -7215,19 +7215,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logIn: {fileID: 0}
   signUp: {fileID: 0}
+  nickname: {fileID: 0}
+  emailVerification: {fileID: 0}
+  nicknameInputField: {fileID: 0}
+  email: 
+  password: 
+  profile: {fileID: 0}
   answerLoader: {fileID: 1822419264}
   line1: {fileID: 273619458}
   shiftLine1: {fileID: 613545385}
+  success: {fileID: 365804949}
+  fail: {fileID: 1216223861}
   isShifted: 0
+  successGetScore: {fileID: 1261510033}
   options: {fileID: 818414996}
   checkMessage:
   - {fileID: 1404274710}
   - {fileID: 939390217}
   - {fileID: 397731984}
-  success: {fileID: 365804949}
-  fail: {fileID: 1216223861}
-  successGetScore: {fileID: 1261510033}
-  profile: {fileID: 0}
+  nicknameText: {fileID: 0}
   scoreText: {fileID: 329028982}
   coinsText: {fileID: 1671430609}
   correctAnswersText: []
