@@ -23,4 +23,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Korean Level 5 Game Scene.unity
     guid: abab3006e90fa8a44bccbd7c40c0f176
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: c7bff24e287eda24f817526095ba4275, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: e5fae05d98ad51c43b1dd221dd13f0bb, type: 2}

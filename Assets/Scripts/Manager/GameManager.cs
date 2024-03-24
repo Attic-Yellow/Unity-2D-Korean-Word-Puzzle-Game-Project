@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     public SceneManaged sceneManager;
 
     [Header("유저 데이터")]
+    private bool isUserGuest = false;
     private string userId;
     private int score;
     private int coins;
@@ -33,6 +34,7 @@ public class GameManager : MonoBehaviour
     [Serializable]
     private class UserData
     {
+        public bool Guest { get; set; }
         public string nickname { get; set; }
         public int score { get; set; }
         public int coins { get; set; }
@@ -117,14 +119,15 @@ public class GameManager : MonoBehaviour
             
             if (deserializedUserData != null) // 역직렬화된 객체의 속성에 직접 접근
             {
+                isUserGuest = deserializedUserData.Guest;
                 nickname = deserializedUserData.nickname;
                 score = deserializedUserData.score;
                 coins = deserializedUserData.coins;
                 correctAnswers = deserializedUserData.correctAnswers ?? new Dictionary<string, int>();
                 wrongAnswers = deserializedUserData.wrongAnswers ?? new Dictionary<string, int>();
 
-                isDataLoaded = true;
                 UpdateDisplayUserData();
+                isDataLoaded = true;
             }
             else
             {
@@ -145,7 +148,6 @@ public class GameManager : MonoBehaviour
 
         if (nickname == null)
         {
-            print("닉네임 패널 활성화");
             uiManager.OnNicknameButton(); // 닉네임 패널 활성화
         }
         else
@@ -154,7 +156,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 
     public void UpdateNickname(string nickname)
     {
         this.nickname = nickname;
@@ -163,6 +164,7 @@ public class GameManager : MonoBehaviour
             if (success)
             {
                 Debug.Log("닉네임 업데이트 성공");
+                OnLoginSuccess();
             }
             else
             {
@@ -279,5 +281,15 @@ public class GameManager : MonoBehaviour
     public string GetNickname()
     {
         return nickname;
+    }
+
+    public void SetIsUserGuest(bool isUserGuest)
+    {
+        this.isUserGuest = isUserGuest;
+    }
+
+    public bool GetIsUserGuest()
+    {
+        return isUserGuest;
     }
 }

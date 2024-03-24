@@ -19,6 +19,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private string password;
 
     [Header("메인 씬")]
+    [SerializeField] private GameObject signupButton;
+    [SerializeField] private GameObject guestToSignup;
     [SerializeField] private GameObject profile;
     [SerializeField] private GameObject ranking;
     [SerializeField] private GameObject rankingPanel; // 랭킹 데이터를 표시할 패널
@@ -71,6 +73,16 @@ public class UIManager : MonoBehaviour
         if (nickname != null)
         {
             nickname.SetActive(false);
+        }
+
+        if (signupButton != null)
+        {
+            signupButton.SetActive(GameManager.Instance.GetIsUserGuest());
+        }
+
+        if (guestToSignup != null)
+        {
+            guestToSignup.SetActive(false);
         }
 
         if (line1 != null)
@@ -180,7 +192,14 @@ public class UIManager : MonoBehaviour
             if (isVerified)
             {
                 Debug.Log("이메일 인증 성공");
-                StartCoroutine(SignInAndLoadScene(email, password));
+                if (GameManager.Instance.authManager.IsChangedToEmailAccount())
+                {
+                    GameManager.Instance.sceneManager.LoadSceneForLogin();
+                }
+                else
+                {
+                    StartCoroutine(SignInAndLoadScene(email, password));
+                }
             }
             else
             {
@@ -217,7 +236,6 @@ public class UIManager : MonoBehaviour
         {
             if (success)
             {
-                GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
                 GameManager.Instance.OnLoginSuccess();
             }
             else
@@ -226,6 +244,7 @@ public class UIManager : MonoBehaviour
             }
         };
 
+        GameManager.Instance.SetIsUserGuest(true);
         GameManager.Instance.firebaseManager.SignInAnonymously(onCompletion); 
         yield return null; // 이 부분은 SignInAnonymously 메서드가 비동기로 완료될 때까지 기다리지 않고,콜백에서 모든 처리
 
@@ -241,10 +260,16 @@ public class UIManager : MonoBehaviour
     public void OnNicknameButtonCallBack()
     {
         GameManager.Instance.UpdateNickname(nicknameInputField.text);
-        GameManager.Instance.sceneManager.LoadSceneForMain();
     }
 
-
+    // 메인 씬에서의 회원가입 버튼
+    public void OnSignupButtonInMain()
+    {
+        if (guestToSignup != null)
+        {
+            guestToSignup.SetActive(!guestToSignup.activeSelf);
+        }
+    }
 
     // 로그아웃 버튼 콜백
     public void OnLogoutButtonClick()
@@ -252,6 +277,7 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.LogOut();
     }
 
+    // 게임 선택 버튼 콜백
     public void OnGameSeletedButton()
     {
         GameManager.Instance.sceneManager.LoadSceneForSelectedLevel();
@@ -377,7 +403,7 @@ public class UIManager : MonoBehaviour
         if (fail != null)
         {
             fail.SetActive(!fail.activeSelf);
-            success.transform.Find("Fail").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
+            fail.transform.Find("Fail").transform.Find("Answer Area").GetComponentInChildren<TextMeshProUGUI>().text = FindAnyObjectByType<AnswerLoader>().GetCurrentAnswerKey();
         }
     }
 

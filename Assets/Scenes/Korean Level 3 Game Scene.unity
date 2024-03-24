@@ -6433,18 +6433,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logIn: {fileID: 0}
   signUp: {fileID: 0}
+  nickname: {fileID: 0}
+  emailVerification: {fileID: 0}
+  nicknameInputField: {fileID: 0}
+  email: 
+  password: 
+  signupButton: {fileID: 0}
+  guestToSignup: {fileID: 0}
+  profile: {fileID: 0}
+  ranking: {fileID: 0}
+  rankingPanel: {fileID: 0}
+  rankingListParent: {fileID: 0}
+  rankingEntryPrefab: {fileID: 0}
   answerLoader: {fileID: 1822419264}
   line1: {fileID: 273619458}
   shiftLine1: {fileID: 613545385}
+  success: {fileID: 1900933495}
+  fail: {fileID: 1261854608}
   isShifted: 0
+  successGetScore: {fileID: 208122224}
   options: {fileID: 818414996}
   checkMessage:
   - {fileID: 1404274710}
   - {fileID: 939390217}
   - {fileID: 397731984}
-  success: {fileID: 1900933495}
-  fail: {fileID: 1261854608}
-  successGetScore: {fileID: 208122224}
+  nicknameText: {fileID: 0}
   scoreText: {fileID: 329028982}
   coinsText: {fileID: 1671430609}
   correctAnswersText: []
@@ -8688,7 +8701,7 @@ GameObject:
   - component: {fileID: 1136546817}
   - component: {fileID: 1136546816}
   m_Layer: 5
-  m_Name: Success
+  m_Name: Fail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14306,6 +14319,7 @@ MonoBehaviour:
   - {fileID: 1156092259}
   - {fileID: 733540568}
   enterButton: {fileID: 1761531134}
+  currentWordContaainerIndex: 0
   inputWord: 000000000000
   word: 
   isInput: 0

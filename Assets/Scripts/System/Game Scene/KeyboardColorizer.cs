@@ -9,7 +9,7 @@ public class KeyboardColorizer : MonoBehaviour
 
     private void Awake()
     {
-        KeyboardKey[] keys = FindObjectsOfType<KeyboardKey>();
+        KeyboardKey[] keys = FindObjectsOfType<KeyboardKey>(true);
 
         foreach (var key in keys)
         {

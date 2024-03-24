@@ -28,6 +28,7 @@ public class LetterContainer : MonoBehaviour
     private char[] consonants = new char[] { 'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ' };
     private char[] vowels = new char[] { 'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ' };
     private char[] finals = new char[] { '\0', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ' };
+    private char[] doubleVowels = new char[] { 'ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ' };
     private char[] doubleFinals = new char[] { 'ㄲ', 'ㄳ', 'ㄵ', 'ㄶ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅄ', 'ㅆ' };
     private char[] firtstFinals = new char[] { 'ㄴ', 'ㄹ', 'ㅂ' };
 
@@ -191,13 +192,19 @@ public class LetterContainer : MonoBehaviour
         return (ch >= 'ㅏ' && ch <= 'ㅣ');
     }
 
+    // 올바른 복합 중성인지 확인하는 메서드
+    private bool IsDoubleVowel(char ch)
+    {
+        return Array.IndexOf(doubleVowels, ch) >= 0;
+    }
+
     // 올바른 종성인지 확인하는 메서드
     private bool IsFinalConsonant(char ch)
     {
         return Array.IndexOf(finals, ch) >= 0;
     }
 
-    // 복합 종성인지 확인하는 메서드
+    // 올바른 복합 종성인지 확인하는 메서드
     private bool IsDoubleFinalConsonant(char ch)
     {
         return Array.IndexOf(doubleFinals, ch) >= 0;
@@ -566,6 +573,9 @@ public class LetterContainer : MonoBehaviour
             int currentCharMedial = (currentCharCode % (21 * 28)) / 28;
             int currentCharFinal = currentCharCode % 28;
 
+            char[] vowel = new char[2];
+            char[] firstFinal = new char[2];
+
             for (int i = 0; i < currentAnswerValue.Length; i++)
             {
                 if (currentAnswerValue[i][0] == consonants[currentCharInitial] && renderer[0].color != Color.green)
@@ -587,28 +597,169 @@ public class LetterContainer : MonoBehaviour
                     keyboardColorizer.UpdateKeyColor(consonants[currentCharInitial], LetterState.Consonant, ColorState.Gray);
                 }
 
+                if (IsDoubleVowel(vowels[currentCharMedial]))
+                {
+                    switch (vowels[currentCharMedial])
+                    {
+                        case 'ㅘ':
+                            vowel[0] = 'ㅗ';
+                            vowel[1] = 'ㅏ';
+                            break;
+                        case 'ㅙ':
+                            vowel[0] = 'ㅗ';
+                            vowel[1] = 'ㅐ';
+                            break;
+                        case 'ㅚ':
+                            vowel[0] = 'ㅗ';
+                            vowel[1] = 'ㅣ';
+                            break;
+                        case 'ㅝ':
+                            vowel[0] = 'ㅜ';
+                            vowel[1] = 'ㅓ';
+                            break;
+                        case 'ㅞ':
+                            vowel[0] = 'ㅜ';
+                            vowel[1] = 'ㅔ';
+                            break;
+                        case 'ㅟ':
+                            vowel[0] = 'ㅜ';
+                            vowel[1] = 'ㅣ';
+                            break;
+                        case 'ㅢ':
+                            vowel[0] = 'ㅡ';
+                            vowel[1] = 'ㅣ';
+                            break;
+                    }
+                }
+
                 if (currentAnswerValue[i][1] == vowels[currentCharMedial] && renderer[1].color != Color.green)
                 {
-                    if (currentLetterIndex == i)
+                    if (IsDoubleVowel(vowels[currentCharMedial]))
                     {
-                        renderer[1].color = Color.green;
-                        keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Green);
+                        if (currentLetterIndex == i)
+                        {
+                            renderer[1].color = Color.green;
+
+                            for (int j = 0; j < 2; j++)
+                            {
+                                keyboardColorizer.UpdateKeyColor(vowel[j], LetterState.Vowel, ColorState.Green);
+                            }
+                        }
+                        else if (renderer[1].color != Color.yellow)
+                        {
+                            renderer[1].color = Color.yellow;
+
+                            for (int j = 0; j < 2; j++)
+                            {
+                                keyboardColorizer.UpdateKeyColor(vowel[j], LetterState.Vowel, ColorState.Yellow);
+                            }
+                        }
                     }
-                    else if (renderer[1].color != Color.yellow)
+                    else
                     {
-                        renderer[1].color = Color.yellow;
-                        keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Yellow);
+                        if (currentLetterIndex == i)
+                        {
+                            renderer[1].color = Color.green;
+                            keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Green);
+                        }
+                        else if (renderer[1].color != Color.yellow)
+                        {
+                            renderer[1].color = Color.yellow;
+                            keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Yellow);
+                        }
                     }
                 }
                 else if (renderer[1].color != Color.green && renderer[1].color != Color.yellow)
                 {
                     renderer[1].color = Color.gray;
-                    keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Gray);
+
+                    if (IsDoubleVowel(vowels[currentCharMedial])) 
+                    {
+                        for (int j = 0; j < 2; j++)
+                        {
+                            keyboardColorizer.UpdateKeyColor(vowel[j], LetterState.Vowel, ColorState.Gray);
+                        }
+                    }
+                    else
+                    {
+                        keyboardColorizer.UpdateKeyColor(vowels[currentCharMedial], LetterState.Vowel, ColorState.Gray);
+                    }
+                }
+
+                if (IsDoubleFinalConsonant(finals[currentCharFinal]))
+                {
+                    switch (finals[currentCharFinal])
+                    {
+                        case 'ㄳ':
+                            firstFinal[0] = 'ㄱ';
+                            firstFinal[1] = 'ㅅ';
+                            break;
+                        case 'ㄵ':
+                            firstFinal[0] = 'ㄴ';
+                            firstFinal[1] = 'ㅈ';
+                            break;
+                        case 'ㄶ':
+                            firstFinal[0] = 'ㄴ';
+                            firstFinal[1] = 'ㅎ';
+                            break;
+                        case 'ㄺ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㄱ';
+                            break;
+                        case 'ㄻ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅁ';
+                            break;
+                        case 'ㄼ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅂ';
+                            break;
+                        case 'ㄽ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅅ';
+                            break;
+                        case 'ㄾ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅌ';
+                            break;
+                        case 'ㄿ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅍ';
+                            break;
+                        case 'ㅀ':
+                            firstFinal[0] = 'ㄹ';
+                            firstFinal[1] = 'ㅎ';
+                            break;
+                        case 'ㅄ':
+                            firstFinal[0] = 'ㅂ';
+                            firstFinal[1] = 'ㅅ';
+                            break;
+                    }
                 }
 
                 if (currentAnswerValue[i][2] == finals[currentCharFinal] && renderer[2].color != Color.green)
                 {
-                    if (currentLetterIndex == i)
+                    if (IsDoubleFinalConsonant(finals[currentCharFinal]))
+                    {
+                        if (currentLetterIndex == i)
+                        {
+                            renderer[2].color = Color.green;
+                            for (int j = 0; j < 2; j++)
+                            {
+                                keyboardColorizer.UpdateKeyColor(firstFinal[j], LetterState.Final, ColorState.Green);
+                            }
+                            
+                        }
+                        else if (renderer[2].color != Color.yellow)
+                        {
+                            renderer[2].color = Color.yellow;
+                            for (int j = 0; j < 2; j++)
+                            {
+                                keyboardColorizer.UpdateKeyColor(firstFinal[j], LetterState.Final, ColorState.Yellow);
+                            }
+                        }
+                    }
+                    else if (currentLetterIndex == i)
                     {
                         renderer[2].color = Color.green;
                         keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Green);
@@ -622,7 +773,18 @@ public class LetterContainer : MonoBehaviour
                 else if (renderer[2].color != Color.green && renderer[2].color != Color.yellow)
                 {
                     renderer[2].color = Color.gray;
-                    keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Gray);
+
+                    if (IsDoubleFinalConsonant(finals[currentCharFinal]))
+                    {
+                        for (int j = 0; j < 2; j++)
+                        {
+                            keyboardColorizer.UpdateKeyColor(firstFinal[j], LetterState.Final, ColorState.Gray);
+                        }
+                    }
+                    else
+                    {
+                        keyboardColorizer.UpdateKeyColor(finals[currentCharFinal], LetterState.Final, ColorState.Gray);
+                    }
                 }
             }
         }

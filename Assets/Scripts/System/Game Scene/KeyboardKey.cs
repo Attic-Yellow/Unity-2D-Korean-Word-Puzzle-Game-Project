@@ -39,10 +39,7 @@ public class KeyboardKey : MonoBehaviour
     {
         
         this.letterState = letterState;
-        if (this.colorState != ColorState.Green)
-        {
-            this.colorState = colorState;
-        }
+        this.colorState = colorState;
         UpdateColorBasedOnState(); // 상태에 따른 색상 업데이트
     }
 
@@ -52,6 +49,12 @@ public class KeyboardKey : MonoBehaviour
         switch (letterState)
         {
             case LetterState.Consonant:
+
+                if(spriteRenderer[0].color == Color.green)
+                {
+                    return;
+                }
+
                 switch (colorState)
                 {
                     case ColorState.Green:
@@ -71,6 +74,12 @@ public class KeyboardKey : MonoBehaviour
                 }
                 break;
             case LetterState.Vowel:
+
+                if (spriteRenderer[1].color == Color.green)
+                {
+                    return;
+                }
+
                 switch (colorState)
                 {
                     case ColorState.Green:
@@ -90,6 +99,12 @@ public class KeyboardKey : MonoBehaviour
                 }
                 break;
             case LetterState.Final:
+
+                if (spriteRenderer[2].color == Color.green)
+                {
+                    return;
+                }
+
                 switch (colorState)
                 {
                     case ColorState.Green:

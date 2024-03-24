@@ -229,7 +229,9 @@ public class FirebaseManager : MonoBehaviour
     {
         var docRef = db.Collection("users").Document(userId);
         var user = new Dictionary<string, object>
-    {   {"nickname", null},
+    {
+        {"Guest" , GameManager.Instance.GetIsUserGuest()},
+        {"nickname", null},
         { "score", 0 },
         { "coins", 500 },
         { "correctAnswers", new Dictionary<string, int> {
@@ -293,6 +295,29 @@ public class FirebaseManager : MonoBehaviour
             else
             {
                 onResult(false); // print($"필드 '{userValue}'가 존재하지 않음);
+            }
+        });
+    }
+
+    // Guest 상태 업데이트
+    public void UpdateGuestStatus(string userId, bool isGuest, Action<bool> onCompletion)
+    {
+        var docRef = db.Collection("users").Document(userId);
+        Dictionary<string, object> updates = new Dictionary<string, object>
+    {
+        { "Guest", isGuest }
+    };
+        docRef.UpdateAsync(updates).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Guest 상태 업데이트 실패: " + task.Exception);
+                onCompletion(false);
+            }
+            else
+            {
+                Debug.Log("Guest 상태 업데이트 성공");
+                onCompletion(true);
             }
         });
     }

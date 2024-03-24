@@ -7,6 +7,8 @@ using Firebase.Extensions;
 
 public class AuthManager : MonoBehaviour
 {
+    private bool isChangedToEmailAccount = false;
+
     private void Awake()
     {
         GameManager.Instance.authManager = this;
@@ -15,24 +17,38 @@ public class AuthManager : MonoBehaviour
     // 이메일로 회원가입
     public void SignUpWithEmail(string email, string password, Action<bool, bool> onCompletion)
     {
-        FirebaseAuth.DefaultInstance.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+        if (GameManager.Instance.GetIsUserGuest())
         {
-            if (task.IsCanceled || task.IsFaulted)
+            LinkGuestAccountWithEmail(email, password);
+
+            SendEmailVerification(emailVerificationSent =>
             {
-                Debug.LogError("회원가입 실패: " + task.Exception);
-                // 회원가입 실패, onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 여부
-                onCompletion(false, false);
-            }
-            else
+                onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
+            });
+        }
+        else
+        {
+            FirebaseAuth.DefaultInstance.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
             {
-                Debug.Log("회원가입 성공");
-                // 여기에서 이메일 인증을 요청합니다.
-                SendEmailVerification(emailVerificationSent =>
+                if (task.IsCanceled || task.IsFaulted)
                 {
-                    onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
-                });
-            }
-        });
+                    Debug.LogError("회원가입 실패: " + task.Exception);
+                    // 회원가입 실패, onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 여부
+                    onCompletion(false, false);
+                }
+                else
+                {
+                    isChangedToEmailAccount = false;
+
+                    Debug.Log("회원가입 성공");
+                    // 여기에서 이메일 인증을 요청합니다.
+                    SendEmailVerification(emailVerificationSent =>
+                    {
+                        onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
+                    });
+                }
+            });
+        }
     }
 
     // 이메일로 로그인
@@ -98,11 +114,19 @@ public class AuthManager : MonoBehaviour
                     if (user.IsEmailVerified)
                     {
                         Debug.Log("이메일 인증됨");
-                        // 이메일 인증됨, 사용자 데이터 초기화
-                        GameManager.Instance.firebaseManager.InitializeUserData(user.UserId, success =>
+
+                        if (!isChangedToEmailAccount)
                         {
-                            onCompletion(success);
-                        });
+                            // 이메일 인증됨, 사용자 데이터 초기화
+                            GameManager.Instance.firebaseManager.InitializeUserData(user.UserId, success =>
+                            {
+                                onCompletion(success);
+                            });
+                        }
+                        else
+                        {
+                            onCompletion(true);
+                        }
                     }
                     else
                     {
@@ -117,5 +141,50 @@ public class AuthManager : MonoBehaviour
             Debug.LogError("사용자 로그인이 필요합니다.");
             onCompletion(false);
         }
+    }
+
+    // 게스트 로그인 유저의 가입 이메일로 계정 연결
+    public void LinkGuestAccountWithEmail(string email, string password)
+    {
+        var user = FirebaseAuth.DefaultInstance.CurrentUser;
+        var credential = EmailAuthProvider.GetCredential(email, password);
+
+        user.LinkWithCredentialAsync(credential).ContinueWith(task =>
+        {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("LinkWithCredentialAsync was canceled.");
+                return;
+            }
+            if (task.IsFaulted)
+            {
+                Debug.LogError("LinkWithCredentialAsync encountered an error: " + task.Exception);
+                return;
+            }
+
+            FirebaseUser newUser = task.Result.User;
+            Debug.LogFormat("User linked successfully. User ID: {0}", newUser.UserId);
+
+            isChangedToEmailAccount = true;
+            GameManager.Instance.SetIsUserGuest(false);
+
+            // 게스트 상태 업데이트
+            GameManager.Instance.firebaseManager.UpdateGuestStatus(task.Result.User.UserId, false, guestUpdated =>
+            {
+                if (guestUpdated)
+                {
+                    Debug.Log("Guest 상태 업데이트 성공");
+                }
+                else
+                {
+                    Debug.LogError("Guest 상태 업데이트 실패");
+                }
+            });
+        });
+    }
+
+    public bool IsChangedToEmailAccount()
+    {
+        return isChangedToEmailAccount;
     }
 }
