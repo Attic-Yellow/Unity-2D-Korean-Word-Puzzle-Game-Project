@@ -169,11 +169,11 @@ public class UIManager : MonoBehaviour
             }
             else if (signUpSuccess)
             {
-                Debug.LogError("회원가입은 성공했지만 이메일 인증 링크 전송에 실패했습니다.");
+                print("회원가입은 성공했지만 이메일 인증 링크 전송에 실패했습니다.");
             }
             else
             {
-                Debug.LogError("회원가입 실패");
+                print("회원가입 실패");
             }
         });
     }
@@ -192,7 +192,7 @@ public class UIManager : MonoBehaviour
             if (isVerified)
             {
                 Debug.Log("이메일 인증 성공");
-                if (GameManager.Instance.authManager.IsChangedToEmailAccount())
+                if (GameManager.Instance.GetIsChangedToEmailAccount())
                 {
                     GameManager.Instance.sceneManager.LoadSceneForLogin();
                 }
@@ -203,7 +203,7 @@ public class UIManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("이메일 인증이 아직 완료되지 않았습니다. 이메일을 확인해주세요.");
+                print("이메일 인증이 아직 완료되지 않았습니다. 이메일을 확인해주세요.");
             }
         });
     }
@@ -216,16 +216,25 @@ public class UIManager : MonoBehaviour
 
     public IEnumerator SignInAndLoadScene(string email, string password)
     {
-        var signInTask = FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password);
-        yield return new WaitUntil(() => signInTask.IsCompleted);
-
-        if (signInTask.Exception != null)
+        // 현재 사용자가 이미 로그인되어 있는지 확인
+        if (FirebaseAuth.DefaultInstance.CurrentUser != null)
         {
-            Debug.LogError("로그인 실패: " + signInTask.Exception);
+            
+            GameManager.Instance.OnLoginSuccess(); // 이미 로그인된 사용자가 있으면 바로 로그인 성공 처리
         }
         else
         {
-            GameManager.Instance.OnLoginSuccess();
+            var signInTask = FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password); // 로그인되어 있지 않은 경우, 이메일과 비밀번호를 사용하여 로그인 시도
+            yield return new WaitUntil(() => signInTask.IsCompleted);
+
+            if (signInTask.Exception != null)
+            {
+                print("로그인 실패: " + signInTask.Exception);
+            }
+            else
+            {
+                GameManager.Instance.OnLoginSuccess(); // 로그인 성공 후 처리
+            }
         }
     }
 

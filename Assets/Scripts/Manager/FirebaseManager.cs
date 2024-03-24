@@ -9,6 +9,7 @@ using Firebase.Auth;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 public class FirebaseManager : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted || task.IsCanceled)
             {
-                Debug.LogError("Could not resolve all Firebase dependencies: " + task.Exception);
+                print("Could not resolve all Firebase dependencies: " + task.Exception);
                 return;
             }
 
@@ -45,11 +46,11 @@ public class FirebaseManager : MonoBehaviour
                 db = FirebaseFirestore.DefaultInstance;
                 auth = FirebaseAuth.DefaultInstance;
                 IsFirebaseInitialized = true; // 초기화 완료
-                Debug.Log("Firebase를 사용할 준비가 됨");
+                print("Firebase를 사용할 준비가 됨");
             }
             else
             {
-                Debug.LogError($"모든 Firebase 종속성을 해결할 수 없음: {dependencyStatus}");
+                print($"모든 Firebase 종속성을 해결할 수 없음: {dependencyStatus}");
             }
         });
     }
@@ -61,22 +62,22 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted || task.IsCanceled)
             {
-                Debug.LogError("게스트 로그인 실패: " + task.Exception);
+                print("게스트 로그인 실패: " + task.Exception);
                 onCompletion(false);
             }
             else
             {
-                
                 FirebaseUser newUser = task.Result.User; // 게스트 로그인 성공
                 InitializeUserData(newUser.UserId, success =>
                 {
                     if (success)
                     {
-                        Debug.Log("게스트 사용자 데이터 초기화 성공");
+                        GameManager.Instance.firebaseManager.UpdateGuestStatus(newUser.UserId, true, guestUpdated => {} );
+                        GameManager.Instance.firebaseManager.UpdateChangedToEmailAccount(newUser.UserId, false, guestUpdated => {} );
                     }
                     else
                     {
-                        Debug.LogError("게스트 사용자 데이터 초기화 실패");
+                        print("게스트 사용자 데이터 초기화 실패");
                     }
                     onCompletion(true);
                 });
@@ -93,7 +94,7 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted)
             {
-                Debug.LogError("문서 조회 실패: " + task.Exception);
+                print("문서 조회 실패: " + task.Exception);
                 onCompletion(false);
                 return;
             }
@@ -110,12 +111,12 @@ public class FirebaseManager : MonoBehaviour
                 {
                     if (updateTask.IsFaulted)
                     {
-                        Debug.LogError("닉네임 업데이트 실패: " + updateTask.Exception);
+                        print("닉네임 업데이트 실패: " + updateTask.Exception);
                         onCompletion(false);
                     }
                     else
                     {
-                        Debug.Log("닉네임 업데이트 성공");
+                        print("닉네임 업데이트 성공");
                         onCompletion(true);
                     }
                 });
@@ -162,12 +163,12 @@ public class FirebaseManager : MonoBehaviour
                 {
                     if (updateTask.IsFaulted)
                     {
-                        Debug.LogError("데이터 업데이트 실패: " + updateTask.Exception);
+                        print("데이터 업데이트 실패: " + updateTask.Exception);
                         onCompletion(false);
                     }
                     else
                     {
-                        Debug.Log("데이터 업데이트 성공");
+                        print("데이터 업데이트 성공");
                         onCompletion(true);
                     }
                 });
@@ -187,12 +188,12 @@ public class FirebaseManager : MonoBehaviour
                 {
                     if (createTask.IsFaulted)
                     {
-                        Debug.LogError("새 문서 생성 실패: " + createTask.Exception);
+                        print("새 문서 생성 실패: " + createTask.Exception);
                         onCompletion(false);
                     }
                     else
                     {
-                        Debug.Log("새 문서 생성 성공");
+                        print("새 문서 생성 성공");
                         onCompletion(true);
                     }
                 });
@@ -209,7 +210,7 @@ public class FirebaseManager : MonoBehaviour
             var snapshot = await docRef.GetSnapshotAsync();
             if (!snapshot.Exists)
             {
-                Debug.LogError("유저 데이터 로드 실패");
+                print("유저 데이터 로드 실패");
                 onCompletion(null);
                 return;
             }
@@ -219,7 +220,7 @@ public class FirebaseManager : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError($"유저 데이터 로드 중 오류 발생: {ex.Message}");
+            print($"유저 데이터 로드 중 오류 발생: {ex.Message}");
             onCompletion(null);
         }
     }
@@ -230,8 +231,10 @@ public class FirebaseManager : MonoBehaviour
         var docRef = db.Collection("users").Document(userId);
         var user = new Dictionary<string, object>
     {
-        {"Guest" , GameManager.Instance.GetIsUserGuest()},
-        {"nickname", null},
+        { "Guest" , GameManager.Instance.GetIsUserGuest() },
+        { "emailauthentication", GameManager.Instance.GetIsEmailAuthentication() },
+        { "ChangedToEmailAccount", GameManager.Instance.GetIsChangedToEmailAccount() },
+        { "nickname", null },
         { "score", 0 },
         { "coins", 500 },
         { "correctAnswers", new Dictionary<string, int> {
@@ -249,7 +252,7 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted)
             {
-                Debug.LogError("사용자 데이터 초기화 실패");
+                print("사용자 데이터 초기화 실패");
                 onCompletion?.Invoke(false);
             }
             else
@@ -264,7 +267,7 @@ public class FirebaseManager : MonoBehaviour
     {
         if (!IsFirebaseInitialized)
         {
-            Debug.LogError("Firebase가 아직 초기화되지 않았음");
+            print("Firebase가 아직 초기화되지 않았음");
             onResult(false);
             return;
         }
@@ -274,7 +277,7 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted)
             {
-                Debug.LogError("문서 조회 중 오류 발생");
+                print("문서 조회 중 오류 발생");
                 onResult(false);
                 return;
             }
@@ -282,7 +285,7 @@ public class FirebaseManager : MonoBehaviour
             var documentSnapshot = task.Result;
             if (!documentSnapshot.Exists)
             {
-                Debug.Log("korean 문서가 존재하지 않습니다.");
+                print("korean 문서가 존재하지 않습니다.");
                 onResult(false);
                 return;
             }
@@ -311,12 +314,57 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted)
             {
-                Debug.LogError("Guest 상태 업데이트 실패: " + task.Exception);
+                print("Guest 상태 업데이트 실패: " + task.Exception);
                 onCompletion(false);
             }
             else
             {
-                Debug.Log("Guest 상태 업데이트 성공");
+                print("Guest 상태 업데이트 성공");
+                onCompletion(true);
+            }
+        });
+    }
+
+    public void UpdateChangedToEmailAccount(string userId, bool isChangedToEmailAccount, Action<bool> onCompletion)
+    {
+        var docRef = db.Collection("users").Document(userId);
+        Dictionary<string, object> updates = new Dictionary<string, object>
+    {
+        { "ChangedToEmailAccount", isChangedToEmailAccount }
+    };
+        docRef.UpdateAsync(updates).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                print("회원 전환 정보 업데이트 실패: " + task.Exception);
+                onCompletion(false);
+            }
+            else
+            {
+                print("회원 전환 정보 업데이트 성공");
+                onCompletion(true);
+            }
+        });
+    }
+
+    // 이메일 인증 상태 업데이트
+    public void UpdateEmailAuthentication(string userId, bool isEmailAuthentication, Action<bool> onCompletion)
+    {
+        var docRef = db.Collection("users").Document(userId);
+        Dictionary<string, object> updates = new Dictionary<string, object>
+    {
+        { "emailauthentication", isEmailAuthentication }
+    };
+        docRef.UpdateAsync(updates).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                print("이메일 인증 상태 업데이트 실패: " + task.Exception);
+                onCompletion(false);
+            }
+            else
+            {
+                print("이메일 인증 상태 업데이트 성공");
                 onCompletion(true);
             }
         });

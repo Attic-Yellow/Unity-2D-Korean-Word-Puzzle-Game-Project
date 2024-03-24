@@ -3167,7 +3167,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 166.15
+  m_fontSize: 164.65
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4021,7 +4021,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 166.15
+  m_fontSize: 164.65
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -4846,7 +4846,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 99.65
+  m_fontSize: 98.8
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5375,7 +5375,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 207.7
+  m_fontSize: 205.85
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -6589,6 +6589,8 @@ MonoBehaviour:
   nicknameInputField: {fileID: 2123312742}
   email: 
   password: 
+  signupButton: {fileID: 0}
+  guestToSignup: {fileID: 0}
   profile: {fileID: 0}
   ranking: {fileID: 0}
   rankingPanel: {fileID: 0}

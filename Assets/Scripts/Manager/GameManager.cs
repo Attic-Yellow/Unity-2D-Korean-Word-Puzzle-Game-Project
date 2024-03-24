@@ -19,6 +19,8 @@ public class GameManager : MonoBehaviour
 
     [Header("유저 데이터")]
     private bool isUserGuest = false;
+    private bool isEmailAuthentication = false;
+    private bool isChangedToEmailAccount = false;
     private string userId;
     private int score;
     private int coins;
@@ -35,6 +37,8 @@ public class GameManager : MonoBehaviour
     private class UserData
     {
         public bool Guest { get; set; }
+        public bool emailauthentication { get; set; }
+        public bool ChangedToEmailAccount { get; set; }
         public string nickname { get; set; }
         public int score { get; set; }
         public int coins { get; set; }
@@ -112,31 +116,52 @@ public class GameManager : MonoBehaviour
     // 사용자 데이터 로드 후 호출되는 콜백 메서드
     private void OnUserDataLoaded(Dictionary<string, object> userData)
     {
-        try
+        if (userData != null)
         {
-            string json = JsonConvert.SerializeObject(userData); // userData 사전을 다시 JSON 문자열로 변환
-            UserData deserializedUserData = JsonConvert.DeserializeObject<UserData>(json); // JSON 문자열을 UserData 클래스로 역직렬화
-            
-            if (deserializedUserData != null) // 역직렬화된 객체의 속성에 직접 접근
+            try
             {
-                isUserGuest = deserializedUserData.Guest;
-                nickname = deserializedUserData.nickname;
-                score = deserializedUserData.score;
-                coins = deserializedUserData.coins;
-                correctAnswers = deserializedUserData.correctAnswers ?? new Dictionary<string, int>();
-                wrongAnswers = deserializedUserData.wrongAnswers ?? new Dictionary<string, int>();
+                string json = JsonConvert.SerializeObject(userData); // userData 사전을 다시 JSON 문자열로 변환
+                UserData deserializedUserData = JsonConvert.DeserializeObject<UserData>(json); // JSON 문자열을 UserData 클래스로 역직렬화
 
-                UpdateDisplayUserData();
-                isDataLoaded = true;
+                if (deserializedUserData != null) // 역직렬화된 객체의 속성에 직접 접근
+                {
+                    isUserGuest = deserializedUserData.Guest;
+                    isEmailAuthentication = deserializedUserData.emailauthentication;
+                    isChangedToEmailAccount = deserializedUserData.ChangedToEmailAccount;
+                    nickname = deserializedUserData.nickname;
+                    score = deserializedUserData.score;
+                    coins = deserializedUserData.coins;
+                    correctAnswers = deserializedUserData.correctAnswers ?? new Dictionary<string, int>();
+                    wrongAnswers = deserializedUserData.wrongAnswers ?? new Dictionary<string, int>();
+
+                    UpdateDisplayUserData();
+                    isDataLoaded = true;
+                }
+                else
+                {
+                    Debug.LogError("사용자 데이터 역직렬화 실패");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Debug.LogError("사용자 데이터 역직렬화 실패");
+                Debug.LogError($"사용자 데이터 처리 중 오류 발생: {ex.Message}");
             }
         }
-        catch (Exception ex)
+        else
         {
-            Debug.LogError($"사용자 데이터 처리 중 오류 발생: {ex.Message}");
+            Debug.Log("유저 데이터가 존재하지 않음. 유저 데이터 초기화 시작");
+            firebaseManager.InitializeUserData(userId, success =>
+            {
+                if (success)
+                {
+                    Debug.Log("유저 데이터 초기화 성공");
+                    LoadCurrentUserProfile(); // 초기화 후 다시 사용자 데이터 로드
+                }
+                else
+                {
+                    Debug.LogError("유저 데이터 초기화 실패");
+                }
+            });
         }
     }
 
@@ -146,13 +171,22 @@ public class GameManager : MonoBehaviour
         LoadCurrentUserProfile();
         yield return new WaitUntil(() => isDataLoaded);
 
-        if (nickname == null)
+        if(isEmailAuthentication || isUserGuest)
         {
-            uiManager.OnNicknameButton(); // 닉네임 패널 활성화
+            if (nickname == null)
+            {
+                uiManager.OnNicknameButton(); // 닉네임 패널 활성화
+            }
+            else
+            {
+                sceneManager.LoadSceneForMain(); // 메인 화면으로 자동 전환
+            }
         }
         else
         {
-            sceneManager.LoadSceneForMain(); // 메인 화면으로 자동 전환
+            uiManager.OnEmailVerificationButton(); // 이메일 인증 패널 활성화
+
+            yield return new WaitUntil(() => isEmailAuthentication);
         }
     }
 
@@ -229,10 +263,9 @@ public class GameManager : MonoBehaviour
         coins += finalScore;
         getScore = finalScore;
         
-        Debug.Log($"라인 {lineIndex + 1}에서 레벨 {level}에 {finalScore}점과 코인을 획득");
-
-        // Firestore에 사용자 문제 해결 데이터 업데이트
-        correctAnswers[levelKey] += 1;
+        print($"라인 {lineIndex + 1}에서 레벨 {level}에 {finalScore}점과 코인을 획득");
+        
+        correctAnswers[levelKey] += 1; // Firestore에 사용자 문제 해결 데이터 업데이트
         level3CorrectAnswers = correctAnswers[levelKey];
 
         print($"{level3CorrectAnswers}, {correctAnswers[levelKey]}");
@@ -240,7 +273,7 @@ public class GameManager : MonoBehaviour
         {
             if (success)
             {
-                Debug.Log("Firebase에 점수와 코인 업데이트 성공");
+                print("Firebase에 점수와 코인 업데이트 성공");
             }
             else
             {
@@ -291,5 +324,25 @@ public class GameManager : MonoBehaviour
     public bool GetIsUserGuest()
     {
         return isUserGuest;
+    }
+
+    public void SetIsEmailAuthentication(bool isEmailAuthentication)
+    {
+        this.isEmailAuthentication = isEmailAuthentication;
+    }
+
+    public bool GetIsEmailAuthentication()
+    {
+        return isEmailAuthentication;
+    }
+
+    public void SetIsChangedToEmailAccount(bool isChangedToEmailAccount)
+    {
+        this.isChangedToEmailAccount = isChangedToEmailAccount;
+    }
+
+    public bool GetIsChangedToEmailAccount()
+    {
+        return isChangedToEmailAccount;
     }
 }
