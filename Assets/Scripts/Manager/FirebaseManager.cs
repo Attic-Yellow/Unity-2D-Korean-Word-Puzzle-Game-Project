@@ -7,9 +7,20 @@ using Firebase.Extensions;
 using System;
 using Firebase.Auth;
 using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.Networking;
+using Newtonsoft.Json;
 
 public class FirebaseManager : MonoBehaviour
 {
+    // 랭킹 데이터를 위한 클래스
+    [System.Serializable]
+    public class RankingEntry
+    {
+        public string userID;
+        public string nickname;
+        public int score;
+    }
+
     public FirebaseAuth auth { get; private set; }
 
     FirebaseFirestore db;
@@ -293,6 +304,29 @@ public class FirebaseManager : MonoBehaviour
         {
             auth.SignOut();
             Debug.Log("로그아웃 성공");
+        }
+    }
+
+    // 랭킹 데이터 요청
+    public IEnumerator GetRankingData(Action<List<RankingEntry>> onCompletion)
+    {
+        string url = "https://us-central1-project-radle-6a6dc.cloudfunctions.net/generateRanking"; // Cloud Functions의 URL을 입력하세요.
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        {
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.isNetworkError || webRequest.isHttpError)
+            {
+                Debug.LogError("랭킹 데이터 요청 실패: " + webRequest.error);
+                onCompletion(null);
+            }
+            else
+            {
+                // Newtonsoft.Json을 사용하여 JSON 응답을 RankingEntry 리스트로 변환
+                string jsonResponse = webRequest.downloadHandler.text;
+                List<RankingEntry> ranking = JsonConvert.DeserializeObject<List<RankingEntry>>(jsonResponse);
+                onCompletion(ranking);
+            }
         }
     }
 }

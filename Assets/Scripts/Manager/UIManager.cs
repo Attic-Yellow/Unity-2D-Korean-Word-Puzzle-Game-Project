@@ -20,6 +20,10 @@ public class UIManager : MonoBehaviour
 
     [Header("메인 씬")]
     [SerializeField] private GameObject profile;
+    [SerializeField] private GameObject ranking;
+    [SerializeField] private GameObject rankingPanel; // 랭킹 데이터를 표시할 패널
+    [SerializeField] private Transform rankingListParent; // 랭킹 엔트리를 배치할 부모 객체
+    [SerializeField] private GameObject rankingEntryPrefab; // 랭킹 엔트리 프리팹
 
     [Header("게임 씬")]
     [SerializeField] private AnswerLoader answerLoader;
@@ -105,6 +109,16 @@ public class UIManager : MonoBehaviour
         if (profile != null)
         {
             profile.SetActive(false);
+        }
+
+        if (ranking != null)
+        {
+            ranking.SetActive(false);
+        }
+
+        if (rankingPanel != null)
+        {
+            rankingPanel.SetActive(false);
         }
 
         GameManager.Instance.UpdateDisplayUserData();
@@ -204,7 +218,7 @@ public class UIManager : MonoBehaviour
             if (success)
             {
                 GameManager.Instance.LoadCurrentUserProfile(); // 사용자 데이터 로드
-                GameManager.Instance.sceneManager.LoadSceneForMain(); // 게스트 로그인 성공, 씬 전환
+                GameManager.Instance.OnLoginSuccess();
             }
             else
             {
@@ -229,6 +243,8 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.UpdateNickname(nicknameInputField.text);
         GameManager.Instance.sceneManager.LoadSceneForMain();
     }
+
+
 
     // 로그아웃 버튼 콜백
     public void OnLogoutButtonClick()
@@ -262,6 +278,60 @@ public class UIManager : MonoBehaviour
         {
             profile.SetActive(!profile.activeSelf);
         }
+    }
+
+    // 랭킹 패널 활성화/비활성화
+    public void OnRankingButton()
+    {
+        if (ranking != null)
+        {
+            ranking.SetActive(!ranking.activeSelf);
+            OnRankingButtonClicked();
+        }
+    }
+
+    // 랭킹 데이터 요청
+    public void OnRankingButtonClicked()
+    {
+        StartCoroutine(GameManager.Instance.firebaseManager.GetRankingData(rankingData =>
+        {
+            if (rankingData != null)
+            {
+                // 기존 엔트리 삭제
+                foreach (Transform child in rankingListParent)
+                {
+                    Destroy(child.gameObject);
+                }
+
+                // 받아온 랭킹 데이터로 UI 업데이트
+                for (int i = 0; i < rankingData.Count; i++)
+                {
+                    GameObject newEntry = Instantiate(rankingEntryPrefab, rankingListParent);
+                    newEntry.GetComponent<RankingEntryUI>().Setup(i + 1, rankingData[i].nickname, rankingData[i].score); // 등수도 함께 설정하기 위해 i + 1을 전달 (등수는 1부터 시작)
+                }
+
+                // 랭킹 패널 활성화 및 Content 높이 조정
+                AdjustContentHeight(rankingData.Count);
+                rankingPanel.SetActive(true);
+            }
+            else
+            {
+                Debug.LogError("랭킹 데이터를 가져오는 데 실패했습니다.");
+            }
+        }));
+    }
+
+    // Content의 높이 조정
+    public void AdjustContentHeight(int entryCount)
+    {
+        float entryHeight = 250f; // 랭킹 엔트리의 높이
+        RectTransform contentRectTransform = rankingListParent.GetComponent<RectTransform>();
+
+        // Content의 높이를 엔트리 수에 따라 조정
+        float totalHeight = (entryCount + 1) * entryHeight;
+
+        // Content의 높이 설정
+        contentRectTransform.sizeDelta = new Vector2(contentRectTransform.sizeDelta.x, totalHeight);
     }
 
     // 한글 레벨 선택 버튼 콜백
