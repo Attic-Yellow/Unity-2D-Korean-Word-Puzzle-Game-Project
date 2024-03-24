@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using System.IO;
 
 public class AnswerLoader : MonoBehaviour
 {
@@ -19,7 +20,8 @@ public class AnswerLoader : MonoBehaviour
 
     private void LoadAnswerFromBundle(int difficulty)
     {
-        string bundleUrl = $"Assets/AssetBundles/answer"; // 에셋 번들의 경로
+        // "StreamingAssets/AssetBundles" 폴더 안의 에셋 번들 경로
+        string bundleUrl = Path.Combine(Application.streamingAssetsPath, "AssetBundles", "answer");
         string assetName = $"korean{difficulty}"; // 로드할 에셋의 이름
 
         StartCoroutine(LoadAssetFromBundle(bundleUrl, assetName)); // 에셋 번들 로드 시작

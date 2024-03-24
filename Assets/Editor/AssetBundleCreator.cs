@@ -8,21 +8,18 @@ public class AssetBundleCreator : Editor
     [MenuItem("Firestore/Build Answer AssetBundle")]
     static void BuildAllAssetBundles()
     {
-        string assetBundleDirectory = "Assets/AssetBundles";
+        // "Assets/StreamingAssets/AssetBundles" 폴더로 경로 변경
+        string assetBundleDirectory = Path.Combine(Application.streamingAssetsPath, "AssetBundles");
         if (!Directory.Exists(assetBundleDirectory))
         {
             Directory.CreateDirectory(assetBundleDirectory);
         }
 
-        // "Assets/Answer" 폴더 내의 모든 에셋에 대해 "Answer"이라는 에셋 번들 이름을 할당
-        AssignAssetBundleName("Assets/Answer", "Answer");
+        AssignAssetBundleName("Assets/Answer", "answer"); // 소문자로 변경하여 일관성 유지
 
-        // 에셋 번들을 빌드
         BuildPipeline.BuildAssetBundles(assetBundleDirectory, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
 
         Debug.Log("AssetBundle has been created at: " + assetBundleDirectory);
-
-        // 에셋 데이터베이스를 갱신
         AssetDatabase.Refresh();
     }
 
@@ -31,8 +28,7 @@ public class AssetBundleCreator : Editor
         var assetPaths = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
         foreach (var assetPath in assetPaths)
         {
-            // 메타 파일을 제외
-            if (assetPath.EndsWith(".meta")) continue;
+            if (assetPath.EndsWith(".meta")) continue; // 메타 파일 제외
 
             var importer = AssetImporter.GetAtPath(assetPath);
             if (importer != null)
