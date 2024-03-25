@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
@@ -39,6 +40,8 @@ public class UIManager : MonoBehaviour
     [Header("공용")]
     [SerializeField] private GameObject options;
     [SerializeField] private GameObject[] checkMessage;
+    [SerializeField] private Button resendEmailButton;
+    private bool canResendEmail = true;
 
     [Header("유저 정보")]
     [SerializeField] private TextMeshProUGUI nicknameText;
@@ -204,8 +207,30 @@ public class UIManager : MonoBehaviour
             else
             {
                 print("이메일 인증이 아직 완료되지 않았습니다. 이메일을 확인해주세요.");
+                // GameManager.Instance.authManager.SendEmailVerification((reSandVerified) => { });
             }
         });
+    }
+
+    // 인증 메일 재발송 버튼
+    public void OnResandButton()
+    {
+        GameManager.Instance.authManager.SendEmailVerification(emailVerificationSent => 
+        {
+            if (emailVerificationSent) 
+            {
+                StartCoroutine(ResendEmailCooldown());
+            }
+        });
+    }
+
+    public IEnumerator ResendEmailCooldown()
+    {
+        canResendEmail = false;
+        resendEmailButton.interactable = false; // 버튼을 비활성화하여 클릭할 수 없게 만듭니다.
+        yield return new WaitForSeconds(60); // 60초 동안 대기
+        canResendEmail = true;
+        resendEmailButton.interactable = true; // 버튼을 다시 활성화합니다.
     }
 
     // 게스트 로그인 버튼

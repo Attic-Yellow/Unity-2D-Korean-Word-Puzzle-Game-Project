@@ -4,9 +4,12 @@ using UnityEngine;
 using Firebase.Auth;
 using System;
 using Firebase.Extensions;
+using Unity.VisualScripting;
 
 public class AuthManager : MonoBehaviour
 {
+    private bool isCompleteLink = false;
+
     private void Awake()
     {
         GameManager.Instance.authManager = this;
@@ -17,18 +20,7 @@ public class AuthManager : MonoBehaviour
     {
         if (GameManager.Instance.GetIsUserGuest())
         {
-            LinkGuestAccountWithEmail(email, password);
-            if (GameManager.Instance.GetIsUserGuest())
-            {
-                GameManager.Instance.firebaseManager.SignOut();
-            }
-            GameManager.Instance.authManager.SignInWithEmail(email, password, success => 
-            {
-                SendEmailVerification(emailVerificationSent =>
-                {
-                    onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
-                });
-            });
+            StartCoroutine(WaitForCompleteLink(email, password, onCompletion));
         }
         else
         {
@@ -49,6 +41,7 @@ public class AuthManager : MonoBehaviour
                     // 여기에서 이메일 인증을 요청합니다.
                     SendEmailVerification(emailVerificationSent =>
                     {
+                        StartCoroutine(GameManager.Instance.uiManager.ResendEmailCooldown());
                         onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
                     });
                 }
@@ -175,6 +168,36 @@ public class AuthManager : MonoBehaviour
         }
     }
 
+    private IEnumerator WaitForCompleteLink(string email, string password, Action<bool, bool> onCompletion)
+    {
+        isCompleteLink = false;
+        LinkGuestAccountWithEmail(email, password);
+        yield return new WaitUntil(() => isCompleteLink);
+
+        if (isCompleteLink)
+        {
+            GameManager.Instance.firebaseManager.SignOut();
+            GameManager.Instance.authManager.SignInWithEmail(email, password, success =>
+            {
+                if (success)
+                {
+                    SendEmailVerification(emailVerificationSent =>
+                    {
+                        if (emailVerificationSent)
+                        {
+                            StartCoroutine(GameManager.Instance.uiManager.ResendEmailCooldown());
+                            onCompletion(true, emailVerificationSent);
+                        }
+                    });
+                }
+            });
+        }
+        else
+        {
+            onCompletion(true, false); // 만약 링크 실패 또는 기타 이유로 완료되지 않았다면, 실패로 처리
+        }
+    }
+
     // 게스트 로그인 유저의 가입 이메일로 계정 연결
     public void LinkGuestAccountWithEmail(string email, string password)
     {
@@ -203,6 +226,7 @@ public class AuthManager : MonoBehaviour
             // 게스트 상태 업데이트
             GameManager.Instance.firebaseManager.UpdateGuestStatus(newUser.UserId, false, guestUpdated => { });
             GameManager.Instance.firebaseManager.UpdateChangedToEmailAccount(newUser.UserId, true, guestUpdated => { });
+            isCompleteLink = true;
         });
     }
 }
