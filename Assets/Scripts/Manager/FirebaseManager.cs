@@ -336,12 +336,12 @@ public class FirebaseManager : MonoBehaviour
         {
             if (task.IsFaulted)
             {
-                print("회원 전환 정보 업데이트 실패: " + task.Exception);
+                // print("회원 전환 정보 업데이트 실패: " + task.Exception);
                 onCompletion(false);
             }
             else
             {
-                print("회원 전환 정보 업데이트 성공");
+                // print("회원 전환 정보 업데이트 성공");
                 onCompletion(true);
             }
         });

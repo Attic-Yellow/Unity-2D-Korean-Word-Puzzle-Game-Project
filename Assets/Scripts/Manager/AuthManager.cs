@@ -18,10 +18,16 @@ public class AuthManager : MonoBehaviour
         if (GameManager.Instance.GetIsUserGuest())
         {
             LinkGuestAccountWithEmail(email, password);
-
-            SendEmailVerification(emailVerificationSent =>
+            if (GameManager.Instance.GetIsUserGuest())
             {
-                onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
+                GameManager.Instance.firebaseManager.SignOut();
+            }
+            GameManager.Instance.authManager.SignInWithEmail(email, password, success => 
+            {
+                SendEmailVerification(emailVerificationSent =>
+                {
+                    onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
+                });
             });
         }
         else
@@ -97,6 +103,7 @@ public class AuthManager : MonoBehaviour
     // 인증 여부 확인
     public void CheckEmailVerification(Action<bool> onCompletion)
     {
+        print($"{FirebaseAuth.DefaultInstance.CurrentUser}");
         var user = FirebaseAuth.DefaultInstance.CurrentUser;
         if (user != null)
         {

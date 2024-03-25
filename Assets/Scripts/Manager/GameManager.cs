@@ -91,6 +91,7 @@ public class GameManager : MonoBehaviour
 
         if (firebaseManager.auth != null) // FirebaseAuth가 준비되었는지 확인
         {
+            // GameManager.Instance.firebaseManager.SignOut();
             CheckAutoLogin();
         }
         else
