@@ -45,6 +45,7 @@ public class AuthManager : MonoBehaviour
                         onCompletion(true, emailVerificationSent); // onCompletion의 첫 번째 인자는 회원가입 성공 여부, 두 번째 인자는 이메일 인증 전송 성공 여부
                     });
                 }
+                GameManager.Instance.uiManager.LoadingController();
             });
         }
     }
@@ -133,6 +134,7 @@ public class AuthManager : MonoBehaviour
                             // 이메일 인증됨, 사용자 데이터 초기화
                             GameManager.Instance.firebaseManager.InitializeUserData(user.UserId, success =>
                             {
+                                GameManager.Instance.uiManager.LoadingController();
                                 onCompletion(success);
                             });
                         }
@@ -186,6 +188,7 @@ public class AuthManager : MonoBehaviour
                         if (emailVerificationSent)
                         {
                             StartCoroutine(GameManager.Instance.uiManager.ResendEmailCooldown());
+                            GameManager.Instance.uiManager.LoadingController();
                             onCompletion(true, emailVerificationSent);
                         }
                     });

@@ -193,19 +193,22 @@ public class GameManager : MonoBehaviour
 
     public void UpdateNickname(string nickname)
     {
+        uiManager.LoadingController();
+        uiManager.LoadingController();
         this.nickname = nickname;
         firebaseManager.UpdateNickname(userId, nickname, success =>
         {
             if (success)
             {
                 Debug.Log("닉네임 업데이트 성공");
-                OnLoginSuccess();
+                OnLoginSuccess(); 
+                uiManager.LoadingController();
             }
             else
             {
                 Debug.LogError("닉네임 업데이트 실패");
             }
-        });
+        }); 
     }
 
     // 사용자 데이터 업데이트

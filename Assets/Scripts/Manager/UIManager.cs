@@ -15,6 +15,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject signUp;
     [SerializeField] private GameObject nickname;
     [SerializeField] private GameObject emailVerification;
+    [SerializeField] private GameObject loading;
     [SerializeField] private TMP_InputField nicknameInputField;
     [SerializeField] private string email;
     [SerializeField] private string password;
@@ -27,6 +28,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject rankingPanel; // 랭킹 데이터를 표시할 패널
     [SerializeField] private Transform rankingListParent; // 랭킹 엔트리를 배치할 부모 객체
     [SerializeField] private GameObject rankingEntryPrefab; // 랭킹 엔트리 프리팹
+    [SerializeField] private GameObject rankingLoading;
 
     [Header("게임 씬")]
     [SerializeField] private AnswerLoader answerLoader;
@@ -57,6 +59,7 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        canResendEmail = true;
 
         if (logIn != null)
         {
@@ -71,6 +74,11 @@ public class UIManager : MonoBehaviour
         if (emailVerification != null)
         {
             emailVerification.SetActive(false);
+        }
+
+        if (loading != null)
+        {
+            loading.SetActive(false);
         }
 
         if (nickname != null)
@@ -136,7 +144,18 @@ public class UIManager : MonoBehaviour
             rankingPanel.SetActive(false);
         }
 
+        if (rankingLoading != null)
+        {
+            rankingLoading.SetActive(false);
+        }
+
         GameManager.Instance.UpdateDisplayUserData();
+    }
+
+    // 로딩 패널 활성화/ 비활성화
+    public void LoadingController()
+    {
+        loading.SetActive(!loading.activeSelf);
     }
 
     // 로그인 패널 활성화/비활성화
@@ -148,6 +167,7 @@ public class UIManager : MonoBehaviour
     // 로그인 버튼 콜백
     public void OnLogInButtonCallBack(string email, string password)
     {
+        LoadingController();
         StartCoroutine(SignInAndLoadScene(email, password));
     }
 
@@ -160,6 +180,7 @@ public class UIManager : MonoBehaviour
     // 회원가입 버튼 콜백
     public void OnSignUpButtonCallBack(string email, string password)
     {
+        LoadingController();
         GameManager.Instance.authManager.SignUpWithEmail(email, password, (signUpSuccess, emailSent) =>
         {
             if (signUpSuccess && emailSent)
@@ -185,11 +206,13 @@ public class UIManager : MonoBehaviour
     public void OnEmailVerificationButton()
     {
         emailVerification.SetActive(!emailVerification.activeSelf);
+        OnResandButton();
     }
 
     // 이메일 인증 확인 버튼 콜백
     public void OnEmailVerificationCheckCallback()
     {
+        LoadingController();
         GameManager.Instance.authManager.CheckEmailVerification((isVerified) =>
         {
             if (isVerified)
@@ -236,6 +259,7 @@ public class UIManager : MonoBehaviour
     // 게스트 로그인 버튼
     public void OnGuestButton()
     {
+        LoadingController();
         StartCoroutine(SignInAnonymouslyAndLoadScene());
     }
 
@@ -244,7 +268,6 @@ public class UIManager : MonoBehaviour
         // 현재 사용자가 이미 로그인되어 있는지 확인
         if (FirebaseAuth.DefaultInstance.CurrentUser != null)
         {
-            
             GameManager.Instance.OnLoginSuccess(); // 이미 로그인된 사용자가 있으면 바로 로그인 성공 처리
         }
         else
@@ -271,6 +294,7 @@ public class UIManager : MonoBehaviour
             if (success)
             {
                 GameManager.Instance.OnLoginSuccess();
+                LoadingController();
             }
             else
             {
@@ -279,7 +303,7 @@ public class UIManager : MonoBehaviour
         };
 
         GameManager.Instance.SetIsUserGuest(true);
-        GameManager.Instance.firebaseManager.SignInAnonymously(onCompletion); 
+        GameManager.Instance.firebaseManager.SignInAnonymously(onCompletion);
         yield return null; // 이 부분은 SignInAnonymously 메서드가 비동기로 완료될 때까지 기다리지 않고,콜백에서 모든 처리
 
     }
@@ -346,7 +370,17 @@ public class UIManager : MonoBehaviour
         if (ranking != null)
         {
             ranking.SetActive(!ranking.activeSelf);
+            RankingLoading();
             OnRankingButtonClicked();
+        }
+    }
+
+    // 랭킹 로딩 활성화/비활성화
+    public void RankingLoading()
+    {
+        if (rankingLoading != null)
+        {
+            rankingLoading.SetActive(!rankingLoading.activeSelf);
         }
     }
 
@@ -372,6 +406,7 @@ public class UIManager : MonoBehaviour
 
                 // 랭킹 패널 활성화 및 Content 높이 조정
                 AdjustContentHeight(rankingData.Count);
+                RankingLoading();
                 rankingPanel.SetActive(true);
             }
             else
